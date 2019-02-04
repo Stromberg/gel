@@ -35,8 +35,8 @@ func (e *Env) AddVar(name string, value interface{}) {
 }
 
 // AddModule adds a module to the Env.
-func (e *Env) AddModule(module *Module) {
-	e.modules = append(e.modules, module)
+func (e *Env) AddModule(module ...*Module) {
+	e.modules = append(e.modules, module...)
 }
 
 func (e *Env) fillScope(scope *twik.Scope) {

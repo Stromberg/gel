@@ -61,13 +61,13 @@ func TestExtendExpressionSimple(t *testing.T) {
 	env := gel.NewEnv()
 	env.AddVar("*", mulSliceWrap)
 
-	e, err := NewGel("v3", "(* v1 v2)", env)
-	assert.NoError(t, err)
+	e := NewGel("v3", "(* v1 v2)", env)
+	assert.NotNil(t, e)
 
 	missing := e.Missing(store)
 	assert.Equal(t, 0, len(missing))
 
-	err = Extend(store, e)
+	err := Extend(store, e)
 	assert.NoError(t, err)
 	res, ok := store.Get("v3")
 	assert.True(t, ok)
@@ -82,9 +82,9 @@ func TestExtendExpression(t *testing.T) {
 	env := gel.NewEnv()
 	env.AddVar("*", mulSliceWrap)
 
-	e1, _ := NewGel("v5", "(* (* v1 v1) v4)", env)
-	e2, _ := NewGel("v3", "(* v1 v2)", env)
-	e3, _ := NewGel("v4", "(* (* v1 v2) v3)", env)
+	e1 := NewGel("v5", "(* (* v1 v1) v4)", env)
+	e2 := NewGel("v3", "(* v1 v2)", env)
+	e3 := NewGel("v4", "(* (* v1 v2) v3)", env)
 
 	err := Extend(store, e1, e2, e3)
 	assert.NoError(t, err)
@@ -109,9 +109,9 @@ func TestExtendPrimitiveExpression(t *testing.T) {
 
 	env := gel.NewEnv()
 
-	e1, _ := NewGelOnFloat64Slice("v5", "(* v1 v1 v4)", env)
-	e2, _ := NewGelOnFloat64Slice("v3", "(* v1 v2)", env)
-	e3, _ := NewGelOnFloat64Slice("v4", "(* v1 v2 v3)", env)
+	e1 := NewGelOnFloat64Slice("v5", "(* v1 v1 v4)", env)
+	e2 := NewGelOnFloat64Slice("v3", "(* v1 v2)", env)
+	e3 := NewGelOnFloat64Slice("v4", "(* v1 v2 v3)", env)
 
 	err := Extend(store, e1, e2, e3)
 	assert.NoError(t, err)

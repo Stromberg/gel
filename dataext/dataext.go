@@ -29,7 +29,7 @@ func Extend(store Store, extenders ...Extender) (err error) {
 		if len(ms) == 0 {
 			err = e.Extend(store)
 			if err != nil {
-				return
+				return fmt.Errorf("Error extending %s: %s", e.ID(), err)
 			}
 			delete(missing, e.ID())
 		} else {
@@ -53,7 +53,7 @@ func Extend(store Store, extenders ...Extender) (err error) {
 			if len(ms) == 0 {
 				err = e.Extend(store)
 				if err != nil {
-					return
+					return fmt.Errorf("Error extending %s: %s", e.ID(), err)
 				}
 				delete(missing2, e.ID())
 			} else {

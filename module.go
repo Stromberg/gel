@@ -17,22 +17,22 @@ type Module struct {
 
 // ModuleRepo is container for modules
 type ModuleRepo struct {
-	modules []*Module
+	Modules []*Module
 }
 
 // NewModuleRepo creates a new ModuleRepo.
 func NewModuleRepo(modules ...*Module) *ModuleRepo {
-	return &ModuleRepo{modules}
+	return &ModuleRepo{Modules: modules}
 }
 
 // Add adds a new module to the ModuleRepo.
 func (r *ModuleRepo) Add(module *Module) {
-	r.modules = append(r.modules, module)
+	r.Modules = append(r.Modules, module)
 }
 
 // Module finds the Module with the given name.
 func (r *ModuleRepo) Module(name string) *Module {
-	for _, m := range r.modules {
+	for _, m := range r.Modules {
 		if m.Name == name {
 			return m
 		}
@@ -43,7 +43,7 @@ func (r *ModuleRepo) Module(name string) *Module {
 
 // Function finds the Func with the given name and the Module it is in.
 func (r *ModuleRepo) Function(name string) (*Func, *Module) {
-	for _, m := range r.modules {
+	for _, m := range r.Modules {
 		for _, f := range m.Funcs {
 			if f.Name == name {
 				return f, m

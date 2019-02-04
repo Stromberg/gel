@@ -10,6 +10,7 @@ import (
 type Gel struct {
 	node ast.Node
 	fset *ast.FileSet
+	code string
 }
 
 // New creates a new Gel from a code string
@@ -20,7 +21,11 @@ func New(code string) (*Gel, error) {
 		return nil, err
 	}
 
-	return &Gel{node, fset}, nil
+	return &Gel{node, fset, code}, nil
+}
+
+func (g *Gel) Code() string {
+	return g.code
 }
 
 // Missing returns the symbols that are missing
