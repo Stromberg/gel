@@ -26,6 +26,10 @@ func (e *funcExtender) ID() string {
 	return e.id
 }
 
+func (e *funcExtender) String() string {
+	return ""
+}
+
 func (e *funcExtender) Missing(store Store) (res []string) {
 	if _, ok := store.Get(e.id); ok {
 		return nil

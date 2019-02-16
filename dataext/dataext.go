@@ -14,6 +14,7 @@ type Store interface {
 // id based on values stored in a Store.
 type Extender interface {
 	ID() string
+	String() string
 	Missing(store Store) []string
 	Extend(store Store) error
 }

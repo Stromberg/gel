@@ -102,6 +102,27 @@ func TestExtendExpression(t *testing.T) {
 	assert.Equal(t, []float64{169, 2304, 9801, 25600}, res)
 }
 
+func TestExtendExpressionVar(t *testing.T) {
+	store := newStore()
+	store.Set("v1", []float64{1, 2, 3, 4})
+	store.Set("v2", []float64{13, 12, 11, 10})
+
+	env := gel.NewEnv()
+	env.AddVar("*", mulSliceWrap)
+
+	e := NewGel("v3", "(var x 1.0) (* v1 v2)", env)
+	assert.NotNil(t, e)
+
+	missing := e.Missing(store)
+	assert.Equal(t, 0, len(missing))
+
+	err := Extend(store, e)
+	assert.NoError(t, err)
+	res, ok := store.Get("v3")
+	assert.True(t, ok)
+	assert.Equal(t, []float64{13, 24, 33, 40}, res)
+}
+
 func TestExtendPrimitiveExpression(t *testing.T) {
 	store := newStore()
 	store.Set("v1", []float64{1, 2, 3, 4})

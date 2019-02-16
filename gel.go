@@ -51,9 +51,23 @@ func missing(s *twik.Scope, node ast.Node) []string {
 	case *ast.Symbol:
 		_, err := s.Get(node.Name)
 		if err != nil {
-			res = append(res, node.Name)
+			return append(res, node.Name)
 		}
 	case *ast.List:
+		if n, ok := node.Nodes[0].(*ast.Symbol); ok {
+			if n.Name == "var" {
+				if n2, ok := node.Nodes[1].(*ast.Symbol); ok {
+					_, err := s.Get(n2.Name)
+					if err != nil {
+						s.Create(n2.Name, 0.0)
+					}
+					for i := 2; i < len(node.Nodes); i++ {
+						res = append(res, missing(s, node.Nodes[i])...)
+					}
+					return res
+				}
+			}
+		}
 		for _, n := range node.Nodes {
 			res = append(res, missing(s, n)...)
 		}

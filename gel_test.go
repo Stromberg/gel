@@ -49,6 +49,18 @@ func TestMissing(t *testing.T) {
 	assert.EqualValues(t, g.Missing(e), []string{"f", "y"})
 }
 
+func TestMissingVar(t *testing.T) {
+	e := NewEnv()
+
+	g, err := New("(var x 1.0) (+ x 3.0)")
+	assert.Nil(t, err)
+	assert.Zero(t, len(g.Missing(e)))
+
+	r, err := g.Eval(e)
+	assert.Nil(t, err)
+	assert.Equal(t, 4.0, r)
+}
+
 func TestEval(t *testing.T) {
 	g, err := New("")
 	assert.Nil(t, err)
