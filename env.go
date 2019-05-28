@@ -1,7 +1,7 @@
 package gel
 
 import (
-	"gopkg.in/twik.v1"
+	"github.com/Stromberg/gel/twik"
 )
 
 // Env contains the variables, functions and modules that

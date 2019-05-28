@@ -2,8 +2,8 @@
 package gel
 
 import (
-	twik "gopkg.in/twik.v1"
-	"gopkg.in/twik.v1/ast"
+	"github.com/Stromberg/gel/twik"
+	"github.com/Stromberg/gel/twik/ast"
 )
 
 // Gel is the language expression handler.
