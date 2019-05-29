@@ -2,8 +2,6 @@
 package gel
 
 import (
-	"fmt"
-
 	"github.com/Stromberg/gel/ast"
 )
 
@@ -16,23 +14,15 @@ type Gel struct {
 }
 
 // New creates a new Gel from a code string
-func New(code string, modules []string) (*Gel, error) {
+func New(code string, modules ...*Module) (*Gel, error) {
 	fset := NewFileSet()
-
-	ms := []*Module{}
-	for _, name := range modules {
-		m := FindModule(name)
-		if m == nil {
-			return nil, fmt.Errorf("No module named %s", name)
-		}
-	}
 
 	node, err := ParseString(fset, "", code)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Gel{node, fset, code, ms}, nil
+	return &Gel{node, fset, code, modules}, nil
 }
 
 func (g *Gel) Code() string {

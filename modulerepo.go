@@ -10,14 +10,6 @@ func Modules() (res []*Module) {
 	return
 }
 
-// AllModules returns all registered module names
-func AllModuleNames() (res []string) {
-	for k := range registeredModules {
-		res = append(res, k)
-	}
-	return
-}
-
 // FindModule finds the registered Module with the given name.
 func FindModule(name string) *Module {
 	m, ok := registeredModules[name]

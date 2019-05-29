@@ -44,6 +44,10 @@ func ErrFunc(v interface{}, adapters ...Adapter) interface{} {
 		}
 
 		result := reflect.ValueOf(v).Call(vargs)
-		return result[0].Interface(), result[1].Interface().(error)
+		err = nil
+		if result[1].Interface() != nil {
+			err = result[1].Interface().(error)
+		}
+		return result[0].Interface(), err
 	}
 }

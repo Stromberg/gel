@@ -24,7 +24,7 @@ func CheckArity(n int) Adapter {
 //CheckArityAtLeast return an function to check if the arity of function call is at least n
 func CheckArityAtLeast(n int) Adapter {
 	return func(values ...interface{}) ([]interface{}, error) {
-		if len(values) >= n {
+		if len(values) < n {
 			return []interface{}{}, errWrongNumberPar
 		}
 		return values, nil

@@ -21,7 +21,7 @@ type gelExtender struct {
 // exprStr is the gel expression to calculate.
 // baseEnv is the environment to use to evaluate the expression.
 func NewGel(id, exprStr string, baseEnv *gel.Env) Extender {
-	gel, err := gel.New(exprStr, nil)
+	gel, err := gel.New(exprStr)
 	if err != nil {
 		return nil
 	}
@@ -40,7 +40,7 @@ func NewGel(id, exprStr string, baseEnv *gel.Env) Extender {
 // exprStr is the gel expression to calculate.
 // baseEnv is the environment to use to evaluate the expression.
 func NewGelOnFloat64Slice(id, exprStr string, baseEnv *gel.Env) *gelExtender {
-	gel, err := gel.New(exprStr, nil)
+	gel, err := gel.New(exprStr)
 	if err != nil {
 		return nil
 	}
