@@ -7,8 +7,7 @@ import (
 // Env contains the variables, functions and modules that
 // should be used for Gel expression evaluation
 type Env struct {
-	vars    map[string]interface{}
-	modules []*twik.Module
+	vars map[string]interface{}
 }
 
 // NewEnv creates a new Env.
@@ -24,8 +23,7 @@ func (e *Env) Copy() *Env {
 	}
 
 	return &Env{
-		vars:    vars,
-		modules: append([]*twik.Module(nil), e.modules...),
+		vars: vars,
 	}
 }
 
@@ -34,16 +32,7 @@ func (e *Env) AddVar(name string, value interface{}) {
 	e.vars[name] = value
 }
 
-// AddModule adds a module to the Env.
-func (e *Env) AddModule(module ...*twik.Module) {
-	e.modules = append(e.modules, module...)
-}
-
 func (e *Env) fillScope(scope *twik.Scope) {
-	for _, m := range e.modules {
-		m.Load(scope)
-	}
-
 	for k, v := range e.vars {
 		scope.SetOrCreate(k, v)
 	}

@@ -7,44 +7,44 @@ import (
 )
 
 func TestNew(t *testing.T) {
-	g, err := New("")
+	g, err := New("", nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, g)
 
-	g, err = New("(+ 1)")
+	g, err = New("(+ 1)", nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, g)
 
-	g, err = New("(+ 1))")
+	g, err = New("(+ 1))", nil)
 	assert.NotNil(t, err)
 	assert.Nil(t, g)
 }
 func TestMissing(t *testing.T) {
-	g, err := New("")
+	g, err := New("", nil)
 	assert.Nil(t, err)
 
 	e := NewEnv()
 	assert.Zero(t, len(g.Missing(e)))
 
-	g, err = New("(+ 1)")
+	g, err = New("(+ 1)", nil)
 	assert.Nil(t, err)
 	assert.Zero(t, len(g.Missing(e)))
 
-	g, err = New("(+ x)")
+	g, err = New("(+ x)", nil)
 	assert.Nil(t, err)
 	assert.EqualValues(t, g.Missing(e), []string{"x"})
 
-	g, err = New("(+ x (f y))")
+	g, err = New("(+ x (f y))", nil)
 	assert.Nil(t, err)
 	assert.EqualValues(t, g.Missing(e), []string{"x", "f", "y"})
 
 	e.AddVar("x", 1)
 
-	g, err = New("(+ x)")
+	g, err = New("(+ x)", nil)
 	assert.Nil(t, err)
 	assert.Zero(t, len(g.Missing(e)))
 
-	g, err = New("(+ x (f y))")
+	g, err = New("(+ x (f y))", nil)
 	assert.Nil(t, err)
 	assert.EqualValues(t, g.Missing(e), []string{"f", "y"})
 }
@@ -52,7 +52,7 @@ func TestMissing(t *testing.T) {
 func TestMissingVar(t *testing.T) {
 	e := NewEnv()
 
-	g, err := New("(var x 1.0) (+ x 3.0)")
+	g, err := New("(var x 1.0) (+ x 3.0)", nil)
 	assert.Nil(t, err)
 	assert.Zero(t, len(g.Missing(e)))
 
@@ -62,7 +62,7 @@ func TestMissingVar(t *testing.T) {
 }
 
 func TestEval(t *testing.T) {
-	g, err := New("")
+	g, err := New("", nil)
 	assert.Nil(t, err)
 
 	e := NewEnv()
@@ -71,7 +71,7 @@ func TestEval(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, r)
 
-	g, err = New("(+ 1)")
+	g, err = New("(+ 1)", nil)
 	assert.Nil(t, err)
 	r, err = g.Eval(e)
 	assert.Nil(t, err)
@@ -79,7 +79,7 @@ func TestEval(t *testing.T) {
 
 	e.AddVar("x", 1.0)
 
-	g, err = New("(+ x 2.14)")
+	g, err = New("(+ x 2.14)", nil)
 	assert.Nil(t, err)
 	r, err = g.Eval(e)
 	assert.NoError(t, err)

@@ -34,7 +34,6 @@ var defaultGlobals = []struct {
 	{"func", funcFn},
 	{"for", forFn},
 	{"range", rangeFn},
-	{"modules.load", loadModuleFn},
 }
 
 func errorFn(args ...interface{}) (value interface{}, err error) {
