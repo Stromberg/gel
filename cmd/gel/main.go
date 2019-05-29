@@ -8,9 +8,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/Stromberg/gel"
 	"golang.org/x/crypto/ssh/terminal"
-
-	"github.com/Stromberg/gel/twik"
 )
 
 func main() {
@@ -21,7 +20,7 @@ func main() {
 	}
 }
 
-func printfFn(args []interface{}) (interface{}, error) {
+func printfFn(args ...interface{}) (interface{}, error) {
 	if len(args) > 0 {
 		if format, ok := args[0].(string); ok {
 			_, err := fmt.Printf(format, args[1:]...)
@@ -31,13 +30,13 @@ func printfFn(args []interface{}) (interface{}, error) {
 	return nil, fmt.Errorf("printf takes a format string")
 }
 
-func listFn(args []interface{}) (interface{}, error) {
+func listFn(args ...interface{}) (interface{}, error) {
 	return args, nil
 }
 
 func run() error {
-	fset := twik.NewFileSet()
-	scope := twik.NewScope(fset)
+	fset := gel.NewFileSet()
+	scope := gel.NewScope(fset)
 	scope.Create("printf", printfFn)
 	scope.Create("list", listFn)
 
@@ -54,7 +53,7 @@ func run() error {
 		if err != nil {
 			return err
 		}
-		node, err := twik.Parse(fset, os.Args[1], data)
+		node, err := gel.Parse(fset, os.Args[1], data)
 		if err != nil {
 			return err
 		}
@@ -79,12 +78,15 @@ func run() error {
 		if err != nil {
 			return err
 		}
+		if line == "exit" {
+			break
+		}
 		if unclosed != "" {
 			line = unclosed + "\n" + line
 		}
 		unclosed = ""
 		t.SetPrompt("> ")
-		node, err := twik.ParseString(fset, "", line)
+		node, err := gel.ParseString(fset, "", line)
 		if err != nil {
 			if strings.HasSuffix(err.Error(), "missing )") {
 				unclosed = line

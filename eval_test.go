@@ -1,10 +1,10 @@
-package twik_test
+package gel_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/Stromberg/gel/twik"
+	"github.com/Stromberg/gel"
 	. "gopkg.in/check.v1"
 )
 
@@ -16,10 +16,10 @@ type S struct{}
 
 func (S) TestEval(c *C) {
 	for _, test := range evalList {
-		fset := twik.NewFileSet()
-		node, err := twik.ParseString(fset, "", test.code)
+		fset := gel.NewFileSet()
+		node, err := gel.ParseString(fset, "", test.code)
 		c.Assert(err, IsNil)
-		scope := twik.NewScope(fset)
+		scope := gel.NewScope(fset)
 		scope.Create("sprintf", sprintfFn)
 		scope.Create("list", listFn)
 		scope.Create("append", appendFn)

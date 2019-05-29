@@ -286,7 +286,7 @@ func NewFileSet() *FileSet {
 	return &FileSet{}
 }
 
-// FileSet holds positioning information for parsed twik code. 
+// FileSet holds positioning information for parsed twik code.
 type FileSet struct {
 	files []file
 }
@@ -321,6 +321,7 @@ func (fset *FileSet) PosInfo(pos Pos) *PosInfo {
 			} else {
 				pinfo.Column = 1 + len(code)
 			}
+			return pinfo
 		}
 	}
 	return pinfo

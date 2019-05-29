@@ -1,7 +1,7 @@
-package twik
+package gel
 
 import (
-	"github.com/Stromberg/gel/twik/ast"
+	"github.com/Stromberg/gel/ast"
 )
 
 // NewFileSet returns a new FileSet to hold positioning information

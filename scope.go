@@ -1,15 +1,15 @@
-// Package twik implements a tiny embeddable language for Go.
+// package gel implements a tiny embeddable language for Go.
 //
 // For details, see the blog post:
 //
 //     http://blog.labix.org/2013/07/16/twik-a-tiny-language-for-go
 //
-package twik
+package gel
 
 import (
 	"fmt"
 
-	"github.com/Stromberg/gel/twik/ast"
+	"github.com/Stromberg/gel/ast"
 )
 
 // Scope is an environment where twik logic may be evaluated in.
@@ -30,12 +30,36 @@ func (e *Error) Error() string {
 }
 
 // NewScope returns a new scope for evaluating logic that was parsed into fset.
-func NewScope(fset *ast.FileSet) *Scope {
+func NewScope(fset *ast.FileSet, modules ...*Module) *Scope {
 	vars := make(map[string]interface{})
-	for _, global := range defaultGlobals {
-		vars[global.name] = global.value
+	for _, f := range GlobalsModule.Funcs {
+		vars[f.Name] = f.F
 	}
-	return &Scope{fset: fset, vars: vars}
+
+	for _, m := range modules {
+		for _, f := range m.Funcs {
+			vars[f.Name] = f.F
+		}
+	}
+
+	scope := &Scope{fset: fset, vars: vars}
+
+	for _, m := range modules {
+		for _, f := range m.LispFuncs {
+			expr := fmt.Sprintf("(var %s %s)", f.Name, f.F)
+			node, err := ParseString(fset, "", expr)
+			if err != nil {
+				return nil
+			}
+
+			_, err = scope.Eval(node)
+			if err != nil {
+				return nil
+			}
+		}
+	}
+
+	return scope
 }
 
 // Create defines a new symbol with the given value in the s scope.

@@ -4,8 +4,7 @@ package gel
 import (
 	"fmt"
 
-	"github.com/Stromberg/gel/twik"
-	"github.com/Stromberg/gel/twik/ast"
+	"github.com/Stromberg/gel/ast"
 )
 
 // Gel is the language expression handler.
@@ -13,29 +12,22 @@ type Gel struct {
 	node    ast.Node
 	fset    *ast.FileSet
 	code    string
-	modules []*twik.Module
+	modules []*Module
 }
 
 // New creates a new Gel from a code string
 func New(code string, modules []string) (*Gel, error) {
-	fset := twik.NewFileSet()
+	fset := NewFileSet()
 
-	ms := []*twik.Module{}
+	ms := []*Module{}
 	for _, name := range modules {
-		m := twik.FindModule(name)
+		m := FindModule(name)
 		if m == nil {
 			return nil, fmt.Errorf("No module named %s", name)
 		}
 	}
 
-	s := ""
-	for _, m := range ms {
-		s += m.LoadLisp()
-	}
-	s += "\n"
-	s += code
-
-	node, err := twik.ParseString(fset, "", s)
+	node, err := ParseString(fset, "", code)
 	if err != nil {
 		return nil, err
 	}
@@ -50,10 +42,8 @@ func (g *Gel) Code() string {
 // Missing returns the symbols that are missing
 // in the environment in order to evaluate the expression.
 func (g *Gel) Missing(env *Env) []string {
-	scope := twik.NewScope(g.fset)
-	for _, m := range g.modules {
-		m.Load(scope)
-	}
+	scope := NewScope(g.fset, g.modules...)
+
 	env.fillScope(scope)
 
 	return missing(scope, g.node)
@@ -61,15 +51,13 @@ func (g *Gel) Missing(env *Env) []string {
 
 // Eval evaluates the expression in the given environment.
 func (g *Gel) Eval(env *Env) (interface{}, error) {
-	scope := twik.NewScope(g.fset)
-	for _, m := range g.modules {
-		m.Load(scope)
-	}
+	scope := NewScope(g.fset, g.modules...)
+
 	env.fillScope(scope)
 	return scope.Eval(g.node)
 }
 
-func missing(s *twik.Scope, node ast.Node) []string {
+func missing(s *Scope, node ast.Node) []string {
 	var res []string
 
 	switch node := node.(type) {

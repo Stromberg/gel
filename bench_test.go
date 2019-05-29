@@ -1,28 +1,28 @@
-package twik_test
+package gel_test
 
 import (
-	"github.com/Stromberg/gel/twik"
+	"github.com/Stromberg/gel"
 	. "gopkg.in/check.v1"
 )
 
 func (S) BenchmarkParse0(c *C) {
-	fset := twik.NewFileSet()
+	fset := gel.NewFileSet()
 	var err error
 	for i := 0; i < c.N; i++ {
-		_, err = twik.ParseString(fset, "", "0")
+		_, err = gel.ParseString(fset, "", "0")
 	}
 	c.StopTimer()
 	c.Assert(err, IsNil)
 }
 
 func (S) BenchmarkEval0(c *C) {
-	fset := twik.NewFileSet()
-	node, err := twik.ParseString(fset, "", "0")
+	fset := gel.NewFileSet()
+	node, err := gel.ParseString(fset, "", "0")
 	c.Assert(err, IsNil)
 	var value interface{}
 	c.ResetTimer()
 	for i := 0; i < c.N; i++ {
-		value, err = twik.NewScope(fset).Eval(node)
+		value, err = gel.NewScope(fset).Eval(node)
 	}
 	c.StopTimer()
 	c.Assert(err, IsNil)
@@ -30,24 +30,24 @@ func (S) BenchmarkEval0(c *C) {
 }
 
 func (S) BenchmarkParseFib(c *C) {
-	fset := twik.NewFileSet()
+	fset := gel.NewFileSet()
 	var err error
 	c.ResetTimer()
 	for i := 0; i < c.N; i++ {
-		_, err = twik.ParseString(fset, "", "(func fib (n) (if (== n 0) 0 (if (== n 1) 1 (+ (fib (- n 1)) (fib (- n 2))))))")
+		_, err = gel.ParseString(fset, "", "(func fib (n) (if (== n 0) 0 (if (== n 1) 1 (+ (fib (- n 1)) (fib (- n 2))))))")
 	}
 	c.StopTimer()
 	c.Assert(err, IsNil)
 }
 
 func (S) BenchmarkEvalFib10(c *C) {
-	fset := twik.NewFileSet()
-	node, err := twik.ParseString(fset, "", "(func fib (n) (if (== n 0) 0 (if (== n 1) 1 (+ (fib (- n 1)) (fib (- n 2)))))) (fib 10)")
+	fset := gel.NewFileSet()
+	node, err := gel.ParseString(fset, "", "(func fib (n) (if (== n 0) 0 (if (== n 1) 1 (+ (fib (- n 1)) (fib (- n 2)))))) (fib 10)")
 	c.Assert(err, IsNil)
 	var value interface{}
 	c.ResetTimer()
 	for i := 0; i < c.N; i++ {
-		value, err = twik.NewScope(fset).Eval(node)
+		value, err = gel.NewScope(fset).Eval(node)
 	}
 	c.StopTimer()
 	c.Assert(err, IsNil)

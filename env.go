@@ -1,9 +1,5 @@
 package gel
 
-import (
-	"github.com/Stromberg/gel/twik"
-)
-
 // Env contains the variables, functions and modules that
 // should be used for Gel expression evaluation
 type Env struct {
@@ -32,7 +28,7 @@ func (e *Env) AddVar(name string, value interface{}) {
 	e.vars[name] = value
 }
 
-func (e *Env) fillScope(scope *twik.Scope) {
+func (e *Env) fillScope(scope *Scope) {
 	for k, v := range e.vars {
 		scope.SetOrCreate(k, v)
 	}

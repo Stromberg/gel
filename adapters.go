@@ -1,4 +1,4 @@
-package twik
+package gel
 
 import (
 	"errors"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Stromberg/gel/twik/ast"
+	"github.com/Stromberg/gel/ast"
 	"github.com/kr/pretty"
 	. "gopkg.in/check.v1"
 )

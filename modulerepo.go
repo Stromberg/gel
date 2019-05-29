@@ -1,4 +1,4 @@
-package twik
+package gel
 
 var registeredModules = map[string]*Module{}
 
@@ -6,6 +6,14 @@ var registeredModules = map[string]*Module{}
 func Modules() (res []*Module) {
 	for _, v := range registeredModules {
 		res = append(res, v)
+	}
+	return
+}
+
+// AllModules returns all registered module names
+func AllModuleNames() (res []string) {
+	for k := range registeredModules {
+		res = append(res, k)
 	}
 	return
 }

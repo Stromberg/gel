@@ -1,39 +1,39 @@
-package twik
+package gel
 
 import (
 	"errors"
 	"fmt"
 
-	"github.com/Stromberg/gel/twik/ast"
+	"github.com/Stromberg/gel/ast"
 )
 
-var defaultGlobals = []struct {
-	name  string
-	value interface{}
-}{
-	{"true", true},
-	{"false", false},
-	{"nil", nil},
-	{"error", errorFn},
-	{"==", eqFn},
-	{"<", lessThanFn},
-	{">", greaterThanFn},
-	{"<=", lessThanEqualFn},
-	{">=", greaterThanEqualFn},
-	{"!=", neFn},
-	{"+", plusFn},
-	{"-", minusFn},
-	{"*", mulFn},
-	{"/", divFn},
-	{"or", orFn},
-	{"and", andFn},
-	{"if", ifFn},
-	{"var", varFn},
-	{"set", setFn},
-	{"do", doFn},
-	{"func", funcFn},
-	{"for", forFn},
-	{"range", rangeFn},
+var GlobalsModule = &Module{
+	Name: "globals",
+	Funcs: []*Func{
+		&Func{Name: "true", F: true},
+		&Func{Name: "false", F: false},
+		&Func{Name: "nil", F: nil},
+		&Func{Name: "error", F: errorFn},
+		&Func{Name: "==", F: eqFn},
+		&Func{Name: "<", F: lessThanFn},
+		&Func{Name: ">", F: greaterThanFn},
+		&Func{Name: "<=", F: lessThanEqualFn},
+		&Func{Name: ">=", F: greaterThanEqualFn},
+		&Func{Name: "!=", F: neFn},
+		&Func{Name: "+", F: plusFn},
+		&Func{Name: "-", F: minusFn},
+		&Func{Name: "*", F: mulFn},
+		&Func{Name: "/", F: divFn},
+		&Func{Name: "or", F: orFn},
+		&Func{Name: "and", F: andFn},
+		&Func{Name: "if", F: ifFn},
+		&Func{Name: "var", F: varFn},
+		&Func{Name: "set", F: setFn},
+		&Func{Name: "do", F: doFn},
+		&Func{Name: "func", F: funcFn},
+		&Func{Name: "for", F: forFn},
+		&Func{Name: "range", F: rangeFn},
+	},
 }
 
 func errorFn(args ...interface{}) (value interface{}, err error) {
@@ -263,30 +263,6 @@ func doFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 		}
 	}
 	return value, nil
-}
-
-func loadModuleFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
-	if len(args) != 1 {
-		return nil, errors.New(`func takes one argument`)
-	}
-	value, err = scope.Eval(args[0])
-	if err != nil {
-		return nil, err
-	}
-
-	name, ok := value.(string)
-	if !ok {
-		return nil, errors.New("Expected string argument")
-	}
-
-	m := FindModule(name)
-	if m == nil {
-		return nil, fmt.Errorf("Module %s not found", name)
-	}
-
-	m.Load(scope)
-
-	return nil, nil
 }
 
 func funcFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
