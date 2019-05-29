@@ -36,7 +36,7 @@ func mulSlice(s1, s2 []float64) []float64 {
 	return res
 }
 
-func mulSliceWrap(args []interface{}) (interface{}, error) {
+func mulSliceWrap(args ...interface{}) (interface{}, error) {
 	if len(args) != 2 {
 		return nil, fmt.Errorf("Need 2 arguments")
 	}

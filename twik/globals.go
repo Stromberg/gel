@@ -16,6 +16,10 @@ var defaultGlobals = []struct {
 	{"nil", nil},
 	{"error", errorFn},
 	{"==", eqFn},
+	{"<", lessThanFn},
+	{">", greaterThanFn},
+	{"<=", lessThanEqualFn},
+	{">=", greaterThanEqualFn},
 	{"!=", neFn},
 	{"+", plusFn},
 	{"-", minusFn},
@@ -30,9 +34,10 @@ var defaultGlobals = []struct {
 	{"func", funcFn},
 	{"for", forFn},
 	{"range", rangeFn},
+	{"modules.load", loadModuleFn},
 }
 
-func errorFn(args []interface{}) (value interface{}, err error) {
+func errorFn(args ...interface{}) (value interface{}, err error) {
 	if len(args) == 1 {
 		if s, ok := args[0].(string); ok {
 			return nil, errors.New(s)
@@ -41,21 +46,21 @@ func errorFn(args []interface{}) (value interface{}, err error) {
 	return nil, errors.New("error function takes a single string argument")
 }
 
-func eqFn(args []interface{}) (value interface{}, err error) {
+func eqFn(args ...interface{}) (value interface{}, err error) {
 	if len(args) != 2 {
 		return nil, errors.New("== takes two values")
 	}
 	return args[0] == args[1], nil
 }
 
-func neFn(args []interface{}) (value interface{}, err error) {
+func neFn(args ...interface{}) (value interface{}, err error) {
 	if len(args) != 2 {
 		return nil, errors.New("!= takes two values")
 	}
 	return args[0] != args[1], nil
 }
 
-func plusFn(args []interface{}) (value interface{}, err error) {
+func plusFn(args ...interface{}) (value interface{}, err error) {
 	var resi int64
 	var resf float64
 	var f bool
@@ -77,7 +82,7 @@ func plusFn(args []interface{}) (value interface{}, err error) {
 	return resi, nil
 }
 
-func minusFn(args []interface{}) (value interface{}, err error) {
+func minusFn(args ...interface{}) (value interface{}, err error) {
 	if len(args) == 0 {
 		return nil, fmt.Errorf(`function "-" takes one or more arguments`)
 	}
@@ -111,7 +116,7 @@ func minusFn(args []interface{}) (value interface{}, err error) {
 	return resi, nil
 }
 
-func mulFn(args []interface{}) (value interface{}, err error) {
+func mulFn(args ...interface{}) (value interface{}, err error) {
 	var resi = int64(1)
 	var resf = float64(1)
 	var f bool
@@ -133,7 +138,7 @@ func mulFn(args []interface{}) (value interface{}, err error) {
 	return resi, nil
 }
 
-func divFn(args []interface{}) (value interface{}, err error) {
+func divFn(args ...interface{}) (value interface{}, err error) {
 	if len(args) < 2 {
 		return nil, fmt.Errorf(`function "/" takes two or more arguments`)
 	}
@@ -261,6 +266,30 @@ func doFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	return value, nil
 }
 
+func loadModuleFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) != 1 {
+		return nil, errors.New(`func takes one argument`)
+	}
+	value, err = scope.Eval(args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	name, ok := value.(string)
+	if !ok {
+		return nil, errors.New("Expected string argument")
+	}
+
+	m := FindModule(name)
+	if m == nil {
+		return nil, fmt.Errorf("Module %s not found", name)
+	}
+
+	m.Load(scope)
+
+	return nil, nil
+}
+
 func funcFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	if len(args) < 2 {
 		return nil, errors.New(`func takes three or more arguments`)
@@ -285,7 +314,7 @@ func funcFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	if len(body) == 0 {
 		return nil, fmt.Errorf("func takes a body sequence")
 	}
-	fn := func(args []interface{}) (value interface{}, err error) {
+	fn := func(args ...interface{}) (value interface{}, err error) {
 		if len(args) != len(params) {
 			nameInfo := "anonymous function"
 			if name != "" {
@@ -411,3 +440,47 @@ func rangeFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	}
 	return nil, errors.New(`range takes an integer or a list as second argument`)
 }
+
+var lessThanEqualFn = SimpleFunc(func(v ...interface{}) bool {
+	switch v[0].(type) {
+	case float64:
+		return v[0].(float64) <= v[1].(float64)
+	case string:
+		return v[0].(string) <= v[1].(string)
+	default:
+		return v[0].(int64) <= v[1].(int64)
+	}
+}, CheckArity(2), ParamsToSameType())
+
+var greaterThanEqualFn = SimpleFunc(func(v ...interface{}) bool {
+	switch v[0].(type) {
+	case float64:
+		return v[0].(float64) >= v[1].(float64)
+	case string:
+		return v[0].(string) >= v[1].(string)
+	default:
+		return v[0].(int64) >= v[1].(int64)
+	}
+}, CheckArity(2), ParamsToSameType())
+
+var lessThanFn = SimpleFunc(func(v ...interface{}) bool {
+	switch v[0].(type) {
+	case float64:
+		return v[0].(float64) < v[1].(float64)
+	case string:
+		return v[0].(string) < v[1].(string)
+	default:
+		return v[0].(int64) < v[1].(int64)
+	}
+}, CheckArity(2), ParamsToSameType())
+
+var greaterThanFn = SimpleFunc(func(v ...interface{}) bool {
+	switch v[0].(type) {
+	case float64:
+		return v[0].(float64) > v[1].(float64)
+	case string:
+		return v[0].(string) > v[1].(string)
+	default:
+		return v[0].(int64) > v[1].(int64)
+	}
+}, CheckArity(2), ParamsToSameType())

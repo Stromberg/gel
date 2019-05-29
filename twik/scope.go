@@ -51,6 +51,12 @@ func (s *Scope) Create(symbol string, value interface{}) error {
 	return nil
 }
 
+func (s *Scope) SetOrCreate(symbol string, value interface{}) {
+	if err := s.Set(symbol, value); err != nil {
+		_ = s.Create(symbol, value)
+	}
+}
+
 // Set sets symbol to the given value in the shallowest scope it is defined in.
 // It is an error to set an undefined symbol.
 func (s *Scope) Set(symbol string, value interface{}) error {
@@ -134,7 +140,7 @@ func (s *Scope) call(fn interface{}, args []ast.Node) (value interface{}, err er
 	if fn, ok := fn.(func(*Scope, []ast.Node) (interface{}, error)); ok {
 		return fn(s, args)
 	}
-	if fn, ok := fn.(func([]interface{}) (interface{}, error)); ok {
+	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
 		vargs := make([]interface{}, len(args))
 		for i, arg := range args {
 			value, err := s.Eval(arg)
@@ -143,7 +149,7 @@ func (s *Scope) call(fn interface{}, args []ast.Node) (value interface{}, err er
 			}
 			vargs[i] = value
 		}
-		return fn(vargs)
+		return fn(vargs...)
 	}
 	return nil, fmt.Errorf("cannot use %#v as a function", fn)
 }

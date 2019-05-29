@@ -38,7 +38,7 @@ func (S) TestEval(c *C) {
 	}
 }
 
-func sprintfFn(args []interface{}) (interface{}, error) {
+func sprintfFn(args ...interface{}) (interface{}, error) {
 	if len(args) < 1 {
 		return nil, fmt.Errorf("sprintf takes at least one format argument")
 	}
@@ -49,11 +49,11 @@ func sprintfFn(args []interface{}) (interface{}, error) {
 	return fmt.Sprintf(format, args[1:]...), nil
 }
 
-func listFn(args []interface{}) (interface{}, error) {
+func listFn(args ...interface{}) (interface{}, error) {
 	return args, nil
 }
 
-func appendFn(args []interface{}) (interface{}, error) {
+func appendFn(args ...interface{}) (interface{}, error) {
 	list, ok := args[0].([]interface{})
 	if !ok {
 		return nil, fmt.Errorf("append takes list as first argument")
@@ -295,6 +295,101 @@ var evalList = []struct {
 	}, {
 		`(!=)`,
 		errorf("twik source:1:2: != takes two values"),
+	},
+
+	// <
+	{
+		`(< 1 2)`,
+		true,
+	},
+	{
+		`(< 1 1)`,
+		false,
+	},
+	{
+		`(< 1 1.0)`,
+		false,
+	},
+	{
+		`(< 1.0 1.0)`,
+		false,
+	},
+	{
+		`(< 1.0 1)`,
+		false,
+	},
+
+	// >
+
+	{
+		`(> 1 2)`,
+		false,
+	},
+	{
+		`(> 1 1)`,
+		false,
+	},
+	{
+		`(> 1 1.0)`,
+		false,
+	},
+	{
+		`(> 1.0 1.0)`,
+		false,
+	},
+	{
+		`(> 1.0 1)`,
+		false,
+	},
+	{
+		`(> 2.0 1)`,
+		true,
+	},
+
+	// <=
+
+	{
+		`(<= 1 2)`,
+		true,
+	},
+	{
+		`(<= 2 1)`,
+		false,
+	},
+	{
+		`(<= 1 1.0)`,
+		true,
+	},
+	{
+		`(<= 1.0 1.0)`,
+		true,
+	},
+	{
+		`(<= 1.0 1)`,
+		true,
+	},
+
+	// >=
+
+	{
+		`(>= 1 2)`,
+		false,
+	},
+	{
+		`(>= 2 1)`,
+		true,
+	},
+	{
+		`(>= 1 1.0)`,
+		true,
+	},
+	{
+		`(>= 1.0 1.0)`,
+		true,
+	},
+	{
+		`(>= 1.0 1)`,
+		true,
 	},
 
 	// or

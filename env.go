@@ -8,7 +8,7 @@ import (
 // should be used for Gel expression evaluation
 type Env struct {
 	vars    map[string]interface{}
-	modules []*Module
+	modules []*twik.Module
 }
 
 // NewEnv creates a new Env.
@@ -25,7 +25,7 @@ func (e *Env) Copy() *Env {
 
 	return &Env{
 		vars:    vars,
-		modules: append([]*Module(nil), e.modules...),
+		modules: append([]*twik.Module(nil), e.modules...),
 	}
 }
 
@@ -35,24 +35,16 @@ func (e *Env) AddVar(name string, value interface{}) {
 }
 
 // AddModule adds a module to the Env.
-func (e *Env) AddModule(module ...*Module) {
+func (e *Env) AddModule(module ...*twik.Module) {
 	e.modules = append(e.modules, module...)
 }
 
 func (e *Env) fillScope(scope *twik.Scope) {
 	for _, m := range e.modules {
-		for _, f := range m.Funcs {
-			err := scope.Set(f.Name, f.F)
-			if err != nil {
-				scope.Create(f.Name, f.F)
-			}
-		}
+		m.Load(scope)
 	}
 
 	for k, v := range e.vars {
-		err := scope.Set(k, v)
-		if err != nil {
-			scope.Create(k, v)
-		}
+		scope.SetOrCreate(k, v)
 	}
 }
