@@ -27,12 +27,14 @@ var GlobalsModule = &Module{
 		&Func{Name: "or", F: orFn},
 		&Func{Name: "and", F: andFn},
 		&Func{Name: "if", F: ifFn},
+		&Func{Name: "cond", F: condFn},
 		&Func{Name: "var", F: varFn},
 		&Func{Name: "set", F: setFn},
 		&Func{Name: "do", F: doFn},
 		&Func{Name: "func", F: funcFn},
 		&Func{Name: "for", F: forFn},
 		&Func{Name: "range", F: rangeFn},
+		&Func{Name: "vec", F: sliceF64sFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "identity", F: "(func (x) x)"},
@@ -46,6 +48,44 @@ func errorFn(args ...interface{}) (value interface{}, err error) {
 		}
 	}
 	return nil, errors.New("error function takes a single string argument")
+}
+
+func sliceF64sFn(args ...interface{}) (value interface{}, err error) {
+	if len(args) == 0 {
+		return []float64{}, nil
+	}
+
+	if list, ok := args[0].([]float64); ok {
+		return list, nil
+	}
+
+	if list, ok := args[0].([]interface{}); ok {
+		res := make([]float64, len(list))
+		for i, e := range list {
+			switch e.(type) {
+			case float64:
+				res[i] = e.(float64)
+			case int64:
+				res[i] = float64(e.(int64))
+			default:
+				return nil, fmt.Errorf("Cannot use %v as float64", e)
+			}
+		}
+		return res, nil
+	}
+
+	res := make([]float64, len(args))
+	for i, e := range args {
+		switch e.(type) {
+		case float64:
+			res[i] = e.(float64)
+		case int64:
+			res[i] = float64(e.(int64))
+		default:
+			return nil, fmt.Errorf("Cannot use %v as float64", e)
+		}
+	}
+	return res, nil
 }
 
 func eqFn(args ...interface{}) (value interface{}, err error) {
@@ -62,7 +102,29 @@ func neFn(args ...interface{}) (value interface{}, err error) {
 	return args[0] != args[1], nil
 }
 
-func plusFn(args ...interface{}) (value interface{}, err error) {
+var plusFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	if len(args) == 0 {
+		return int64(0), nil
+	}
+
+	if IsSlice(args[0]) {
+		res := make([]float64, len(args[0].([]float64)))
+		for i, v := range args[0].([]float64) {
+			res[i] = v
+		}
+
+		for _, arg := range args[1:] {
+			if len(arg.([]float64)) != len(res) {
+				return nil, errors.New("Vectors of different length")
+			}
+			for i, v := range arg.([]float64) {
+				res[i] += v
+			}
+		}
+
+		return res, nil
+	}
+
 	var resi int64
 	var resf float64
 	var f bool
@@ -82,12 +144,37 @@ func plusFn(args ...interface{}) (value interface{}, err error) {
 		return resf, nil
 	}
 	return resi, nil
-}
+}, ParamsToSameBaseType(), ParamsSlicify())
 
-func minusFn(args ...interface{}) (value interface{}, err error) {
+var minusFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	if len(args) == 0 {
 		return nil, fmt.Errorf(`function "-" takes one or more arguments`)
 	}
+
+	if IsSlice(args[0]) {
+		res := make([]float64, len(args[0].([]float64)))
+		if len(args) == 1 {
+			for i, v := range args[0].([]float64) {
+				res[i] = -v
+			}
+		} else {
+			for i, v := range args[0].([]float64) {
+				res[i] = v
+			}
+		}
+
+		for _, arg := range args[1:] {
+			if len(arg.([]float64)) != len(res) {
+				return nil, errors.New("Vectors of different length")
+			}
+			for i, v := range arg.([]float64) {
+				res[i] -= v
+			}
+		}
+
+		return res, nil
+	}
+
 	var resi int64
 	var resf float64
 	var f bool
@@ -116,9 +203,31 @@ func minusFn(args ...interface{}) (value interface{}, err error) {
 		return resf, nil
 	}
 	return resi, nil
-}
+}, ParamsToSameBaseType(), ParamsSlicify())
 
-func mulFn(args ...interface{}) (value interface{}, err error) {
+var mulFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	if len(args) == 0 {
+		return int64(1), nil
+	}
+
+	if IsSlice(args[0]) {
+		res := make([]float64, len(args[0].([]float64)))
+		for i, v := range args[0].([]float64) {
+			res[i] = v
+		}
+
+		for _, arg := range args[1:] {
+			if len(arg.([]float64)) != len(res) {
+				return nil, errors.New("Vectors of different length")
+			}
+			for i, v := range arg.([]float64) {
+				res[i] *= v
+			}
+		}
+
+		return res, nil
+	}
+
 	var resi = int64(1)
 	var resf = float64(1)
 	var f bool
@@ -138,12 +247,31 @@ func mulFn(args ...interface{}) (value interface{}, err error) {
 		return resf, nil
 	}
 	return resi, nil
-}
+}, ParamsToSameBaseType(), ParamsSlicify())
 
-func divFn(args ...interface{}) (value interface{}, err error) {
+var divFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	if len(args) < 2 {
-		return nil, fmt.Errorf(`function "/" takes two or more arguments`)
+		return nil, errors.New("function \"/\" takes two or more arguments")
 	}
+
+	if IsSlice(args[0]) {
+		res := make([]float64, len(args[0].([]float64)))
+		for i, v := range args[0].([]float64) {
+			res[i] = v
+		}
+
+		for _, arg := range args[1:] {
+			if len(arg.([]float64)) != len(res) {
+				return nil, errors.New("Vectors of different length")
+			}
+			for i, v := range arg.([]float64) {
+				res[i] /= v
+			}
+		}
+
+		return res, nil
+	}
+
 	var resi int64
 	var resf float64
 	var f bool
@@ -172,7 +300,7 @@ func divFn(args ...interface{}) (value interface{}, err error) {
 		return resf, nil
 	}
 	return resi, nil
-}
+}, ParamsToSameBaseType(), ParamsSlicify())
 
 func andFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	if len(args) == 0 {
@@ -221,6 +349,29 @@ func ifFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 		return false, nil
 	}
 	return scope.Eval(args[1])
+}
+
+func condFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) < 2 {
+		return nil, errors.New(`function "cond" takes two or more arguments`)
+	}
+
+	i := 0
+	for ; i+1 < len(args); i += 2 {
+		value, err = scope.Eval(args[i])
+		if err != nil {
+			return nil, err
+		}
+		if value != false {
+			return scope.Eval(args[i+1])
+		}
+	}
+
+	if len(args)%2 == 0 {
+		return false, nil
+	}
+
+	return scope.Eval(args[len(args)-1])
 }
 
 func varFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
@@ -428,7 +579,7 @@ var lessThanEqualFn = SimpleFunc(func(v ...interface{}) bool {
 	default:
 		return v[0].(int64) <= v[1].(int64)
 	}
-}, CheckArity(2), ParamsToSameType())
+}, CheckArity(2), ParamsToSameBaseType())
 
 var greaterThanEqualFn = SimpleFunc(func(v ...interface{}) bool {
 	switch v[0].(type) {
@@ -439,7 +590,7 @@ var greaterThanEqualFn = SimpleFunc(func(v ...interface{}) bool {
 	default:
 		return v[0].(int64) >= v[1].(int64)
 	}
-}, CheckArity(2), ParamsToSameType())
+}, CheckArity(2), ParamsToSameBaseType())
 
 var lessThanFn = SimpleFunc(func(v ...interface{}) bool {
 	switch v[0].(type) {
@@ -450,7 +601,7 @@ var lessThanFn = SimpleFunc(func(v ...interface{}) bool {
 	default:
 		return v[0].(int64) < v[1].(int64)
 	}
-}, CheckArity(2), ParamsToSameType())
+}, CheckArity(2), ParamsToSameBaseType())
 
 var greaterThanFn = SimpleFunc(func(v ...interface{}) bool {
 	switch v[0].(type) {
@@ -461,4 +612,4 @@ var greaterThanFn = SimpleFunc(func(v ...interface{}) bool {
 	default:
 		return v[0].(int64) > v[1].(int64)
 	}
-}, CheckArity(2), ParamsToSameType())
+}, CheckArity(2), ParamsToSameBaseType())

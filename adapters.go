@@ -51,43 +51,14 @@ func CheckArityOdd() Adapter {
 	}
 }
 
-func ParamsToSameType() Adapter {
-	anyStrings := func(values ...interface{}) bool {
-		for _, v := range values {
-			_, ok := v.(string)
-			if ok {
-				return true
-			}
-		}
-		return false
-	}
-
-	allStrings := func(values ...interface{}) bool {
-		for _, v := range values {
-			_, ok := v.(string)
-			if !ok {
-				return false
-			}
-		}
-		return true
-	}
-
-	anyFloats := func(values ...interface{}) bool {
-		for _, v := range values {
-			_, ok := v.(float64)
-			if ok {
-				return true
-			}
-		}
-		return false
-	}
-
+//ParamsToSameBaseType return an Adapter to convert int64 to float64 if there are any float64
+func ParamsToSameBaseType() Adapter {
 	return func(values ...interface{}) ([]interface{}, error) {
-		if anyStrings(values...) {
-			if !allStrings(values) {
+		if IsAnyStrings(values...) {
+			if !IsAllStrings(values) {
 				return []interface{}{}, errParameterType
 			}
-		} else if anyFloats(values...) {
+		} else if IsAnyFloats(values...) {
 			for i := range values {
 				switch values[i].(type) {
 				case int64:
@@ -98,6 +69,12 @@ func ParamsToSameType() Adapter {
 		}
 
 		return values, nil
+	}
+}
+
+func ParamsSlicify() Adapter {
+	return func(values ...interface{}) ([]interface{}, error) {
+		return MakeAllEitherSliceOrValue(values...)
 	}
 }
 

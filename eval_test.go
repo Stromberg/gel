@@ -120,6 +120,24 @@ var evalList = []struct {
 		errorf("twik source:1:2: error function takes a single string argument"),
 	},
 
+	// vec
+	{
+		`(vec)`,
+		[]float64{},
+	},
+	{
+		`(vec 12.0)`,
+		[]float64{12.0},
+	},
+	{
+		`(vec 12)`,
+		[]float64{12.0},
+	},
+	{
+		`(vec 12 3.14)`,
+		[]float64{12.0, 3.14},
+	},
+
 	// +
 	{
 		`(+)`,
@@ -135,7 +153,7 @@ var evalList = []struct {
 		6,
 	}, {
 		`(+ "123")`,
-		errorf(`twik source:1:2: cannot sum "123"`),
+		errorf(`twik source:1:2: Error in parameter type`),
 	}, {
 		`(+ 1.5)`,
 		1.5,
@@ -148,6 +166,24 @@ var evalList = []struct {
 	}, {
 		`(+ 1 1.5)`,
 		2.5,
+	}, {
+		`(+ 3 (vec 2))`,
+		[]float64{5},
+	}, {
+		`(+ 3 (vec 2 3 4))`,
+		[]float64{5, 6, 7},
+	},
+	{
+		`(+ (vec 2 4.5 6) (vec 2 3 4))`,
+		[]float64{4, 7.5, 10},
+	},
+	{
+		`(+ (vec 2 4 6) (vec 1.5 3.14))`,
+		errorf("twik source:1:2: Vectors of different length"),
+	},
+	{
+		`(+ (vec 2 4) (vec 1.5 3.14 6))`,
+		errorf("twik source:1:2: Vectors of different length"),
 	},
 
 	// -
@@ -168,7 +204,7 @@ var evalList = []struct {
 		9,
 	}, {
 		`(- "123")`,
-		errorf(`twik source:1:2: cannot subtract "123"`),
+		errorf(`twik source:1:2: Error in parameter type`),
 	}, {
 		`(- 1.5)`,
 		-1.5,
@@ -181,6 +217,27 @@ var evalList = []struct {
 	}, {
 		`(- 1 1.5)`,
 		-0.5,
+	}, {
+		`(- (vec 2 4))`,
+		[]float64{-2, -4},
+	}, {
+		`(- 3 (vec 2))`,
+		[]float64{1},
+	}, {
+		`(- 3 (vec 2 3 4))`,
+		[]float64{1, 0, -1},
+	},
+	{
+		`(- (vec 2 4.5 6) (vec 2 3 4))`,
+		[]float64{0, 1.5, 2},
+	},
+	{
+		`(- (vec 2 4 6) (vec 1.5 3.14))`,
+		errorf("twik source:1:2: Vectors of different length"),
+	},
+	{
+		`(- (vec 2 4) (vec 1.5 3.14 6))`,
+		errorf("twik source:1:2: Vectors of different length"),
 	},
 
 	// *
@@ -198,7 +255,7 @@ var evalList = []struct {
 		24,
 	}, {
 		`(* "123")`,
-		errorf(`twik source:1:2: cannot multiply "123"`),
+		errorf(`twik source:1:2: Error in parameter type`),
 	}, {
 		`(* 1.5)`,
 		1.5,
@@ -211,6 +268,24 @@ var evalList = []struct {
 	}, {
 		`(* 1 1.5)`,
 		1.5,
+	}, {
+		`(* 1 (vec 1.5))`,
+		[]float64{1.5},
+	}, {
+		`(* 2 (vec 1.5 3.14 5.6))`,
+		[]float64{3.0, 6.28, 11.2},
+	},
+	{
+		`(* (vec 2 4 6) (vec 1.5 3.14 5))`,
+		[]float64{3.0, 12.56, 30},
+	},
+	{
+		`(* (vec 2 4 6) (vec 1.5 3.14))`,
+		errorf("twik source:1:2: Vectors of different length"),
+	},
+	{
+		`(* (vec 2 4) (vec 1.5 3.14 6))`,
+		errorf("twik source:1:2: Vectors of different length"),
 	},
 
 	// /
@@ -231,7 +306,7 @@ var evalList = []struct {
 		6,
 	}, {
 		`(/ 10 "123")`,
-		errorf(`twik source:1:2: cannot divide with "123"`),
+		errorf(`twik source:1:2: Error in parameter type`),
 	}, {
 		`(/ 10.0 2.0)`,
 		5.0,
@@ -241,6 +316,24 @@ var evalList = []struct {
 	}, {
 		`(/ 10 2.0)`,
 		5.0,
+	}, {
+		`(/ 3 (vec 2))`,
+		[]float64{1.5},
+	}, {
+		`(/ 3 (vec 2 3 4))`,
+		[]float64{1.5, 1.0, 0.75},
+	},
+	{
+		`(/ (vec 2 4.5 6) (vec 2 3 4))`,
+		[]float64{1.0, 1.5, 1.5},
+	},
+	{
+		`(/ (vec 2 4 6) (vec 1.5 3.14))`,
+		errorf("twik source:1:2: Vectors of different length"),
+	},
+	{
+		`(/ (vec 2 4) (vec 1.5 3.14 6))`,
+		errorf("twik source:1:2: Vectors of different length"),
 	},
 
 	// ==
@@ -534,6 +627,36 @@ var evalList = []struct {
 	}, {
 		`(if 1)`,
 		errorf(`twik source:1:2: function "if" takes two or three arguments`),
+	},
+
+	// cond
+	{
+		`(cond true 1)`,
+		1,
+	}, {
+		`(cond 0 1)`,
+		1,
+	}, {
+		`(cond false 1)`,
+		false,
+	}, {
+		`(cond false 1 2)`,
+		2,
+	}, {
+		`(cond true 1 2)`,
+		1,
+	}, {
+		`(cond false 1 true 2)`,
+		2,
+	}, {
+		`(cond false 1 false 2 3)`,
+		3,
+	}, {
+		`(cond)`,
+		errorf(`twik source:1:2: function "cond" takes two or more arguments`),
+	}, {
+		`(cond 1)`,
+		errorf(`twik source:1:2: function "cond" takes two or more arguments`),
 	},
 
 	// for
