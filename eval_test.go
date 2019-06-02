@@ -364,6 +364,132 @@ var evalList = []struct {
 		errorf(`twik source:1:2: Out of range`),
 	},
 
+	// append
+	{
+		`(append (dict))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(append (vec))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(append (list))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(append (vec 12.0) 13)`,
+		[]float64{12.0, 13.0},
+	},
+	{
+		`(append (list "d") 0 45)`,
+		[]interface{}{"d", int64(0), int64(45)},
+	},
+	{
+		`(append (vec 12.0) 1 34)`,
+		[]float64{12.0, 1.0, 34},
+	},
+	{
+		`(append (list "d") 1 "a")`,
+		[]interface{}{"d", int64(1), "a"},
+	},
+
+	// range
+	{
+		`(range)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(range 1)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(range 1 2)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(range 1 2 1)`,
+		[]interface{}{int64(1)},
+	},
+	{
+		`(range 1 6 2)`,
+		[]interface{}{int64(1), int64(3), int64(5)},
+	},
+	{
+		`(range 1.0 6.0 2.5)`,
+		[]interface{}{1.0, 3.5},
+	},
+
+	// vec-range
+	{
+		`(vec-range)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(vec-range 1)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(vec-range 1 2)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(vec-range 1 2 1)`,
+		[]float64{1},
+	},
+	{
+		`(vec-range 1 6 2)`,
+		[]float64{1, 3, 5},
+	},
+	{
+		`(vec-range 1.0 6.0 2.5)`,
+		[]float64{1.0, 3.5},
+	},
+
+	// repeat
+	{
+		`(repeat)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(repeat 1)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(repeat 1 2)`,
+		[]interface{}{int64(2)},
+	},
+	{
+		`(repeat 3 6)`,
+		[]interface{}{int64(6), int64(6), int64(6)},
+	},
+	{
+		`(repeat 2 6.0)`,
+		[]interface{}{6.0, 6.0},
+	},
+
+	// vec-repeat
+	{
+		`(vec-repeat)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(vec-repeat 1)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(vec-repeat 1 2)`,
+		[]float64{2},
+	},
+	{
+		`(vec-repeat 3 6)`,
+		[]float64{6, 6, 6},
+	},
+	{
+		`(vec-repeat 2 6.0)`,
+		[]float64{6.0, 6.0},
+	},
+
 	// len
 	{
 		`(len (dict))`,
@@ -941,24 +1067,6 @@ var evalList = []struct {
 	}, {
 		`(var x 0) (for (var i 0) (!= i 4) (set i (+ i 1)) (set x (+ x i)) (* 2 x))`,
 		12,
-	},
-
-	// range
-	{
-		`(range 1 2)`,
-		errorf("twik source:1:2: range takes three or more arguments"),
-	}, {
-		`(range 1 2 3)`,
-		errorf(`twik source:1:2: range takes var name or \(i elem\) var name pair as first argument`),
-	}, {
-		`(range i 0 ()) i`,
-		errorf("twik source:1:16: undefined symbol: i"),
-	}, {
-		`(var x 0) (range i 4 (set x (+ x i)) (* 2 x))`,
-		12,
-	}, {
-		`(var l ()) (range (i e) (list "A" "B" "C") (set l (append l i e))) l`,
-		[]interface{}{0, "A", 1, "B", 2, "C"},
 	},
 
 	// identity

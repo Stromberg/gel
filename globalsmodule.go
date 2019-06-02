@@ -33,7 +33,6 @@ var GlobalsModule = &Module{
 		&Func{Name: "do", F: doFn},
 		&Func{Name: "func", F: funcFn},
 		&Func{Name: "for", F: forFn},
-		&Func{Name: "range", F: rangeFn},
 		&Func{Name: "vec", F: vecFn},
 		&Func{Name: "list", F: listFn},
 		&Func{Name: "vec?", F: isVecFn},
@@ -45,6 +44,11 @@ var GlobalsModule = &Module{
 		&Func{Name: "contains?", F: containsFn},
 		&Func{Name: "update", F: updateFn},
 		&Func{Name: "len", F: lenFn},
+		&Func{Name: "append", F: appendFn},
+		&Func{Name: "range", F: rangeFn},
+		&Func{Name: "vec-range", F: vecRangeFn},
+		&Func{Name: "repeat", F: repeatFn},
+		&Func{Name: "vec-repeat", F: vecRepeatFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "identity", F: "(func (x) x)"},
@@ -147,6 +151,82 @@ func listFn(args ...interface{}) (value interface{}, err error) {
 
 	return args, nil
 }
+
+var rangeFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	res := []interface{}{}
+
+	switch args[0].(type) {
+	case int64:
+		for i := args[0].(int64); i < args[1].(int64); i += args[2].(int64) {
+			res = append(res, i)
+		}
+		return res, nil
+	case float64:
+		for i := args[0].(float64); i < args[1].(float64); i += args[2].(float64) {
+			res = append(res, i)
+		}
+		return res, nil
+	}
+
+	return nil, errParameterType
+}, CheckArity(3), ParamsToSameBaseType())
+
+var repeatFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	n, ok := args[0].(int64)
+	if !ok {
+		return nil, errParameterType
+	}
+
+	v := args[1]
+
+	res := make([]interface{}, n)
+	for i := range res {
+		res[i] = v
+	}
+	return res, nil
+}, CheckArity(2))
+
+var vecRepeatFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	n, ok := args[0].(int64)
+	if !ok {
+		return nil, errParameterType
+	}
+
+	v, ok := args[1].(float64)
+	if !ok {
+		vi, ok := args[1].(int64)
+		if !ok {
+			return nil, errParameterType
+		}
+
+		v = float64(vi)
+	}
+
+	res := make([]float64, n)
+	for i := range res {
+		res[i] = v
+	}
+	return res, nil
+}, CheckArity(2))
+
+var vecRangeFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	res := []float64{}
+
+	switch args[0].(type) {
+	case int64:
+		for i := args[0].(int64); i < args[1].(int64); i += args[2].(int64) {
+			res = append(res, float64(i))
+		}
+		return res, nil
+	case float64:
+		for i := args[0].(float64); i < args[1].(float64); i += args[2].(float64) {
+			res = append(res, i)
+		}
+		return res, nil
+	}
+
+	return nil, errParameterType
+}, CheckArity(3), ParamsToSameBaseType())
 
 var isVecFn = SimpleFunc(func(args ...interface{}) interface{} {
 	_, ok := args[0].([]float64)
@@ -268,6 +348,34 @@ var updateFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 	}
 	return nil, errParameterType
 }, CheckArity(3))
+
+var appendFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
+	switch args[0].(type) {
+	case []interface{}:
+		v := args[0].([]interface{})
+		for _, n := range args[1:] {
+			v = append(v, n)
+		}
+		return v, nil
+	case []float64:
+		v := args[0].([]float64)
+
+		for _, n := range args[1:] {
+			f, ok := n.(float64)
+			if !ok {
+				iv, ok := n.(int64)
+				if !ok {
+					return nil, errParameterType
+				}
+				f = float64(iv)
+			}
+			v = append(v, f)
+		}
+
+		return v, nil
+	}
+	return nil, errParameterType
+}, CheckArityAtLeast(2))
 
 var lenFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 	switch args[0].(type) {
@@ -706,61 +814,6 @@ func forFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 		}
 	}
 	panic("unreachable")
-}
-
-func rangeFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
-	if len(args) < 3 {
-		return nil, errors.New(`range takes three or more arguments`)
-	}
-	var iname, ename string
-	if symbol, ok := args[0].(*ast.Symbol); ok {
-		iname = symbol.Name
-	} else if list, ok := args[0].(*ast.List); ok && len(list.Nodes) == 2 {
-		symbol1, ok1 := list.Nodes[0].(*ast.Symbol)
-		symbol2, ok2 := list.Nodes[1].(*ast.Symbol)
-		if ok1 && ok2 {
-			iname = symbol1.Name
-			ename = symbol2.Name
-		}
-	}
-	if iname == "" {
-		return nil, errors.New(`range takes var name or (i elem) var name pair as first argument`)
-	}
-	scope = scope.Branch()
-	value, err = scope.Eval(args[1])
-	if err != nil {
-		return nil, err
-	}
-	code := args[2:]
-	if n, ok := value.(int64); ok {
-		scope.Create(iname, 0)
-		for i := int64(0); i < n; i++ {
-			scope.Set(iname, i)
-			for _, c := range code {
-				value, err = scope.Eval(c)
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
-		return value, nil
-	}
-	if list, ok := value.([]interface{}); ok {
-		scope.Create(iname, 0)
-		scope.Create(ename, nil)
-		for i, e := range list {
-			scope.Set(iname, i)
-			scope.Set(ename, e)
-			for _, c := range code {
-				value, err = scope.Eval(c)
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
-		return value, nil
-	}
-	return nil, errors.New(`range takes an integer or a list as second argument`)
 }
 
 var lessThanEqualFn = SimpleFunc(func(v ...interface{}) bool {
