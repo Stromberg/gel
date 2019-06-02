@@ -254,6 +254,150 @@ var evalList = []struct {
 		errorf(`twik source:1:2: dict-keys expects a dictionary`),
 	},
 
+	// get
+	{
+		`(get (dict))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(get (vec))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(get (list))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(get (dict "d" 12.0) "d")`,
+		12.0,
+	},
+	{
+		`(get (vec 12.0) 0)`,
+		12.0,
+	},
+	{
+		`(get (list "d") 0)`,
+		"d",
+	},
+	{
+		`(get (dict "d" 12.0) "a")`,
+		errorf(`twik source:1:2: Key not found`),
+	},
+	{
+		`(get (vec 12.0) 1)`,
+		errorf(`twik source:1:2: Key not found`),
+	},
+	{
+		`(get (list "d") 1)`,
+		errorf(`twik source:1:2: Key not found`),
+	},
+
+	// contains?
+	{
+		`(contains? (dict))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(contains? (vec))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(contains? (list))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(contains? (dict "d" 12.0) "d")`,
+		true,
+	},
+	{
+		`(contains? (vec 12.0) 0)`,
+		true,
+	},
+	{
+		`(contains? (list "d") 0)`,
+		true,
+	},
+	{
+		`(contains? (dict "d" 12.0) "a")`,
+		false,
+	},
+	{
+		`(contains? (vec 12.0) 1)`,
+		false,
+	},
+	{
+		`(contains? (list "d") 1)`,
+		false,
+	},
+
+	// update
+	{
+		`(update (dict))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(update (vec))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(update (list))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(update (dict "d" 12.0) "a" 13)`,
+		map[interface{}]interface{}{"a": int64(13), "d": 12.0},
+	},
+	{
+		`(update (vec 12.0) 0 13)`,
+		[]float64{13.0},
+	},
+	{
+		`(update (list "d") 0 45)`,
+		[]interface{}{int64(45)},
+	},
+	{
+		`(update (vec 12.0) 1 34)`,
+		errorf(`twik source:1:2: Out of range`),
+	},
+	{
+		`(update (list "d") 1 "a")`,
+		errorf(`twik source:1:2: Out of range`),
+	},
+
+	// len
+	{
+		`(len (dict))`,
+		int64(0),
+	},
+	{
+		`(len (vec))`,
+		int64(0),
+	},
+	{
+		`(len (list))`,
+		int64(0),
+	},
+	{
+		`(len (dict "d" 12.0))`,
+		int64(1),
+	},
+	{
+		`(len (vec 12.0))`,
+		int64(1),
+	},
+	{
+		`(len (list "d"))`,
+		int64(1),
+	},
+	{
+		`(len 1)`,
+		errorf(`twik source:1:2: Error in parameter type`),
+	},
+	{
+		`(len)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+
 	// +
 	{
 		`(+)`,

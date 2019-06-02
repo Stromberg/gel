@@ -41,6 +41,10 @@ var GlobalsModule = &Module{
 		&Func{Name: "dict", F: dictFn},
 		&Func{Name: "dict?", F: isDictFn},
 		&Func{Name: "dict-keys", F: dictKeysFn},
+		&Func{Name: "get", F: getFn},
+		&Func{Name: "contains?", F: containsFn},
+		&Func{Name: "update", F: updateFn},
+		&Func{Name: "len", F: lenFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "identity", F: "(func (x) x)"},
@@ -157,6 +161,124 @@ var isListFn = SimpleFunc(func(args ...interface{}) interface{} {
 var isDictFn = SimpleFunc(func(args ...interface{}) interface{} {
 	_, ok := args[0].(map[interface{}]interface{})
 	return ok
+}, CheckArity(1))
+
+var getFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
+	switch args[0].(type) {
+	case map[interface{}]interface{}:
+		v, ok := args[0].(map[interface{}]interface{})[args[1]]
+		if !ok {
+			return nil, errors.New("Key not found")
+		}
+		return v, nil
+	case []interface{}:
+		v := args[0].([]interface{})
+		i, ok := args[1].(int64)
+		if !ok {
+			return nil, errParameterType
+		}
+
+		if int(i) >= len(v) {
+			return nil, errors.New("Key not found")
+		}
+		return v[i], nil
+	case []float64:
+		v := args[0].([]float64)
+		i, ok := args[1].(int64)
+		if !ok {
+			return nil, errParameterType
+		}
+
+		if int(i) >= len(v) {
+			return nil, errors.New("Key not found")
+		}
+		return v[i], nil
+	}
+	return nil, errParameterType
+}, CheckArity(2))
+
+var containsFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
+	switch args[0].(type) {
+	case map[interface{}]interface{}:
+		_, ok := args[0].(map[interface{}]interface{})[args[1]]
+		return ok, nil
+	case []interface{}:
+		v := args[0].([]interface{})
+		i, ok := args[1].(int64)
+		if !ok {
+			return nil, errParameterType
+		}
+
+		if int(i) >= len(v) {
+			return false, nil
+		}
+		return true, nil
+	case []float64:
+		v := args[0].([]float64)
+		i, ok := args[1].(int64)
+		if !ok {
+			return nil, errParameterType
+		}
+
+		if int(i) >= len(v) {
+			return false, nil
+		}
+		return true, nil
+	}
+	return nil, errParameterType
+}, CheckArity(2))
+
+var updateFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
+	switch args[0].(type) {
+	case map[interface{}]interface{}:
+		args[0].(map[interface{}]interface{})[args[1]] = args[2]
+		return args[0], nil
+	case []interface{}:
+		v := args[0].([]interface{})
+		i, ok := args[1].(int64)
+		if !ok {
+			return nil, errParameterType
+		}
+
+		if int(i) >= len(v) {
+			return nil, errors.New("Out of range")
+		}
+		v[i] = args[2]
+		return args[0], nil
+	case []float64:
+		v := args[0].([]float64)
+		i, ok := args[1].(int64)
+		if !ok {
+			return nil, errParameterType
+		}
+		f, ok := args[2].(float64)
+		if !ok {
+			iv, ok := args[2].(int64)
+			if !ok {
+				return nil, errParameterType
+			}
+			f = float64(iv)
+		}
+
+		if int(i) >= len(v) {
+			return args[0], errors.New("Out of range")
+		}
+		v[i] = f
+		return args[0], nil
+	}
+	return nil, errParameterType
+}, CheckArity(3))
+
+var lenFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
+	switch args[0].(type) {
+	case map[interface{}]interface{}:
+		return int64(len(args[0].(map[interface{}]interface{}))), nil
+	case []interface{}:
+		return int64(len(args[0].([]interface{}))), nil
+	case []float64:
+		return int64(len(args[0].([]float64))), nil
+	}
+	return nil, errParameterType
 }, CheckArity(1))
 
 func eqFn(args ...interface{}) (value interface{}, err error) {
