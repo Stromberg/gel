@@ -44,6 +44,19 @@ func NewScope(fset *ast.FileSet, modules ...*Module) *Scope {
 
 	scope := &Scope{fset: fset, vars: vars}
 
+	for _, f := range GlobalsModule.LispFuncs {
+		expr := fmt.Sprintf("(var %s %s)", f.Name, f.F)
+		node, err := ParseString(fset, "", expr)
+		if err != nil {
+			return nil
+		}
+
+		_, err = scope.Eval(node)
+		if err != nil {
+			return nil
+		}
+	}
+
 	for _, m := range modules {
 		for _, f := range m.LispFuncs {
 			expr := fmt.Sprintf("(var %s %s)", f.Name, f.F)

@@ -34,6 +34,9 @@ var GlobalsModule = &Module{
 		&Func{Name: "for", F: forFn},
 		&Func{Name: "range", F: rangeFn},
 	},
+	LispFuncs: []*LispFunc{
+		&LispFunc{Name: "identity", F: "(func (x) x)"},
+	},
 }
 
 func errorFn(args ...interface{}) (value interface{}, err error) {

@@ -578,6 +578,12 @@ var evalList = []struct {
 		[]interface{}{0, "A", 1, "B", 2, "C"},
 	},
 
+	// identity
+	{
+		`(identity 1)`,
+		1,
+	},
+
 	// calling of custom functions
 	{
 		`(sprintf "Value: %.02f" 1.0)`,

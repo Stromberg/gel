@@ -51,3 +51,10 @@ func ErrFunc(v interface{}, adapters ...Adapter) interface{} {
 		return result[0].Interface(), err
 	}
 }
+
+// WrapFunc builds a Gel function from a function call that returns a function
+func WrapFunc(v interface{}, values []interface{}, adapters ...Adapter) interface{} {
+	f := SimpleFunc(v).(func(...interface{}) (interface{}, error))
+	res, _ := f(values...)
+	return SimpleFunc(res, adapters...)
+}
