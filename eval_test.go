@@ -394,6 +394,94 @@ var evalList = []struct {
 		[]interface{}{"d", int64(1), "a"},
 	},
 
+	// apply
+	{
+		`(apply)`,
+		errorf(`twik source:1:2: apply takes two or more arguments`),
+	},
+	{
+		`(apply 1)`,
+		errorf(`twik source:1:2: apply takes two or more arguments`),
+	},
+	{
+		`(apply 1 2)`,
+		errorf(`twik source:1:2: Error in parameter type`),
+	},
+	{
+		`(apply (func (x) (+ 2 x)) (list 2))`,
+		[]interface{}{int64(4)},
+	},
+	{
+		`(apply (func (x) (+ 2 x)) (list 1 2 3))`,
+		[]interface{}{int64(3), int64(4), int64(5)},
+	},
+	{
+		`(apply (func (x) (+ 2.0 x)) (list 1 2 3))`,
+		[]interface{}{3.0, 4.0, 5.0},
+	},
+
+	// reduce
+	{
+		`(reduce)`,
+		errorf(`twik source:1:2: reduce takes three arguments`),
+	},
+	{
+		`(reduce 1)`,
+		errorf(`twik source:1:2: reduce takes three arguments`),
+	},
+	{
+		`(reduce 1 2)`,
+		errorf(`twik source:1:2: reduce takes three arguments`),
+	},
+	{
+		`(reduce 1 2 3)`,
+		errorf(`twik source:1:2: Error in parameter type`),
+	},
+	{
+		`(reduce (func (a b) (+ a b)) (list 2) 1)`,
+		int64(3),
+	},
+	{
+		`(reduce (func (a b) (+ a b)) (list 1 2 3 4) 0)`,
+		int64(10),
+	},
+
+	// map
+	{
+		`(map (dict))`,
+		errorf(`twik source:1:2: map takes two arguments`),
+	},
+	{
+		`(map (func (x) (+ 1.0 x)) (list 12.0))`,
+		[]interface{}{13.0},
+	},
+	{
+		`(map (func (x) (+ 1 x)) (list 12))`,
+		[]interface{}{int64(13)},
+	},
+	{
+		`(map (func (x) (+ 1.0 x)) (list 12.0 3))`,
+		[]interface{}{13.0, 4.0},
+	},
+
+	// vec-map
+	{
+		`(vec-map (dict))`,
+		errorf(`twik source:1:2: vec-map takes two arguments`),
+	},
+	{
+		`(vec-map (func (x) (+ 1.0 x)) (vec 12.0))`,
+		[]float64{13.0},
+	},
+	{
+		`(vec-map (func (x) (+ 1 x)) (vec 12))`,
+		[]float64{13},
+	},
+	{
+		`(vec-map (func (x) (+ 1.0 x)) (vec 12.0 3))`,
+		[]float64{13.0, 4},
+	},
+
 	// range
 	{
 		`(range)`,
@@ -444,6 +532,32 @@ var evalList = []struct {
 	{
 		`(vec-range 1.0 6.0 2.5)`,
 		[]float64{1.0, 3.5},
+	},
+
+	// vec-apply
+	{
+		`(vec-apply)`,
+		errorf(`twik source:1:2: vec-apply takes two or more arguments`),
+	},
+	{
+		`(vec-apply 1)`,
+		errorf(`twik source:1:2: vec-apply takes two or more arguments`),
+	},
+	{
+		`(vec-apply 1 2)`,
+		errorf(`twik source:1:2: Error in parameter type`),
+	},
+	{
+		`(vec-apply (func (x) (+ 2 x)) (vec 2))`,
+		[]float64{4},
+	},
+	{
+		`(vec-apply (func (x) (+ 2 x)) (vec 1 2 3))`,
+		[]float64{3, 4, 5},
+	},
+	{
+		`(vec-apply (func (x y) (+ x y)) (vec 1 2 3) (vec 10 21 33))`,
+		[]float64{11, 23, 36},
 	},
 
 	// repeat

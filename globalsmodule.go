@@ -49,6 +49,11 @@ var GlobalsModule = &Module{
 		&Func{Name: "vec-range", F: vecRangeFn},
 		&Func{Name: "repeat", F: repeatFn},
 		&Func{Name: "vec-repeat", F: vecRepeatFn},
+		&Func{Name: "map", F: mapFn},
+		&Func{Name: "vec-map", F: vecMapFn},
+		&Func{Name: "apply", F: applyFn},
+		&Func{Name: "vec-apply", F: vecApplyFn},
+		&Func{Name: "reduce", F: reduceFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "identity", F: "(func (x) x)"},
@@ -780,6 +785,227 @@ func funcFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 		}
 	}
 	return fn, nil
+}
+
+func mapFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) != 2 {
+		return nil, errors.New(`map takes two arguments`)
+	}
+
+	fn, err := scope.Eval(args[0])
+	if err != nil {
+		return nil, scope.errorAt(args[0], err)
+	}
+	listRaw, err := scope.Eval(args[1])
+	if err != nil {
+		return nil, scope.errorAt(args[1], err)
+	}
+
+	list, ok := listRaw.([]interface{})
+	if !ok {
+		return nil, errParameterType
+	}
+
+	res := []interface{}{}
+	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+		for _, v := range list {
+			r, err := fn(v)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, r)
+		}
+
+		return res, nil
+	}
+
+	return nil, errParameterType
+}
+
+func reduceFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) != 3 {
+		return nil, errors.New(`reduce takes three arguments`)
+	}
+
+	fn, err := scope.Eval(args[0])
+	if err != nil {
+		return nil, scope.errorAt(args[0], err)
+	}
+	listRaw, err := scope.Eval(args[1])
+	if err != nil {
+		return nil, scope.errorAt(args[1], err)
+	}
+
+	list, ok := listRaw.([]interface{})
+	if !ok {
+		return nil, errParameterType
+	}
+
+	init, err := scope.Eval(args[2])
+	if err != nil {
+		return nil, scope.errorAt(args[2], err)
+	}
+
+	r := init
+	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+		for _, v := range list {
+			r, err = fn(r, v)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return r, nil
+	}
+
+	return nil, errParameterType
+}
+
+func applyFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) < 2 {
+		return nil, errors.New(`apply takes two or more arguments`)
+	}
+
+	fn, err := scope.Eval(args[0])
+	if err != nil {
+		return nil, scope.errorAt(args[0], err)
+	}
+
+	lists := [][]interface{}{}
+	for _, arg := range args[1:] {
+		listRaw, err := scope.Eval(arg)
+		if err != nil {
+			return nil, scope.errorAt(arg, err)
+		}
+		list, ok := listRaw.([]interface{})
+		if !ok {
+			return nil, errParameterType
+		}
+		lists = append(lists, list)
+	}
+
+	l := len(lists[0])
+
+	res := []interface{}{}
+	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+		for i := 0; i < l; i++ {
+			fnArgs := make([]interface{}, len(lists))
+			for j, list := range lists {
+				if len(list) != l {
+					return nil, errors.New("Lists must be of same length")
+				}
+				fnArgs[j] = list[i]
+			}
+			r, err := fn(fnArgs...)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, r)
+		}
+
+		return res, nil
+	}
+
+	return nil, errParameterType
+}
+
+func vecApplyFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) < 2 {
+		return nil, errors.New(`vec-apply takes two or more arguments`)
+	}
+
+	fn, err := scope.Eval(args[0])
+	if err != nil {
+		return nil, scope.errorAt(args[0], err)
+	}
+
+	lists := [][]float64{}
+	for _, arg := range args[1:] {
+		listRaw, err := scope.Eval(arg)
+		if err != nil {
+			return nil, scope.errorAt(arg, err)
+		}
+		list, ok := listRaw.([]float64)
+		if !ok {
+			return nil, errParameterType
+		}
+		lists = append(lists, list)
+	}
+
+	l := len(lists[0])
+
+	res := []float64{}
+	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+		for i := 0; i < l; i++ {
+			fnArgs := make([]interface{}, len(lists))
+			for j, list := range lists {
+				if len(list) != l {
+					return nil, errors.New("Lists must be of same length")
+				}
+				fnArgs[j] = list[i]
+			}
+			r, err := fn(fnArgs...)
+			if err != nil {
+				return nil, err
+			}
+			f, ok := r.(float64)
+			if !ok {
+				vi, ok := r.(int64)
+				if !ok {
+					return nil, errParameterType
+				}
+				f = float64(vi)
+			}
+			res = append(res, f)
+		}
+
+		return res, nil
+	}
+
+	return nil, errParameterType
+}
+
+func vecMapFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) != 2 {
+		return nil, errors.New(`vec-map takes two arguments`)
+	}
+
+	fn, err := scope.Eval(args[0])
+	if err != nil {
+		return nil, scope.errorAt(args[0], err)
+	}
+	listRaw, err := scope.Eval(args[1])
+	if err != nil {
+		return nil, scope.errorAt(args[1], err)
+	}
+
+	list, ok := listRaw.([]float64)
+	if !ok {
+		return nil, errParameterType
+	}
+
+	res := []float64{}
+	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+		for _, v := range list {
+			r, err := fn(v)
+			if err != nil {
+				return nil, err
+			}
+			f, ok := r.(float64)
+			if !ok {
+				vi, ok := r.(int64)
+				if !ok {
+					return nil, errParameterType
+				}
+				f = float64(vi)
+			}
+			res = append(res, f)
+		}
+
+		return res, nil
+	}
+
+	return nil, errParameterType
 }
 
 func forFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
