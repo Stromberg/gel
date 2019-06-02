@@ -34,7 +34,13 @@ var GlobalsModule = &Module{
 		&Func{Name: "func", F: funcFn},
 		&Func{Name: "for", F: forFn},
 		&Func{Name: "range", F: rangeFn},
-		&Func{Name: "vec", F: sliceF64sFn},
+		&Func{Name: "vec", F: vecFn},
+		&Func{Name: "list", F: listFn},
+		&Func{Name: "vec?", F: isVecFn},
+		&Func{Name: "list?", F: isListFn},
+		&Func{Name: "dict", F: dictFn},
+		&Func{Name: "dict?", F: isDictFn},
+		&Func{Name: "dict-keys", F: dictKeysFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "identity", F: "(func (x) x)"},
@@ -50,7 +56,7 @@ func errorFn(args ...interface{}) (value interface{}, err error) {
 	return nil, errors.New("error function takes a single string argument")
 }
 
-func sliceF64sFn(args ...interface{}) (value interface{}, err error) {
+func vecFn(args ...interface{}) (value interface{}, err error) {
 	if len(args) == 0 {
 		return []float64{}, nil
 	}
@@ -87,6 +93,71 @@ func sliceF64sFn(args ...interface{}) (value interface{}, err error) {
 	}
 	return res, nil
 }
+
+var dictFn = SimpleFunc(func(args ...interface{}) interface{} {
+	if len(args) == 0 {
+		return map[interface{}]interface{}{}
+	}
+
+	res := make(map[interface{}]interface{})
+	for i := 0; i+1 < len(args); i += 2 {
+		res[args[i]] = args[i+1]
+	}
+
+	return res
+}, CheckArityEven())
+
+var dictKeysFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
+	dict, ok := args[0].(map[interface{}]interface{})
+	if !ok {
+		return nil, errors.New("dict-keys expects a dictionary")
+	}
+
+	keys := make([]interface{}, len(dict))
+
+	i := 0
+	for k := range dict {
+		keys[i] = k
+		i++
+	}
+
+	return keys, nil
+}, CheckArity(1))
+
+func listFn(args ...interface{}) (value interface{}, err error) {
+	if len(args) == 0 {
+		return []interface{}{}, nil
+	}
+
+	if list, ok := args[0].([]interface{}); ok {
+		return list, nil
+	}
+
+	if list, ok := args[0].([]float64); ok {
+		res := make([]interface{}, len(list))
+		for i, e := range list {
+			res[i] = e
+		}
+		return res, nil
+	}
+
+	return args, nil
+}
+
+var isVecFn = SimpleFunc(func(args ...interface{}) interface{} {
+	_, ok := args[0].([]float64)
+	return ok
+}, CheckArity(1))
+
+var isListFn = SimpleFunc(func(args ...interface{}) interface{} {
+	_, ok := args[0].([]interface{})
+	return ok
+}, CheckArity(1))
+
+var isDictFn = SimpleFunc(func(args ...interface{}) interface{} {
+	_, ok := args[0].(map[interface{}]interface{})
+	return ok
+}, CheckArity(1))
 
 func eqFn(args ...interface{}) (value interface{}, err error) {
 	if len(args) != 2 {

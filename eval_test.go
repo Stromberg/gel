@@ -137,6 +137,122 @@ var evalList = []struct {
 		`(vec 12 3.14)`,
 		[]float64{12.0, 3.14},
 	},
+	{
+		`(vec (list 12 3.14))`,
+		[]float64{12.0, 3.14},
+	},
+
+	// vec?
+	{
+		`(vec? (vec))`,
+		true,
+	},
+	{
+		`(vec? (list))`,
+		false,
+	},
+	{
+		`(vec? 1)`,
+		false,
+	},
+	{
+		`(vec? (vec) (vec))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+
+	// list
+	{
+		`(list)`,
+		[]interface{}{},
+	},
+	{
+		`(list 12.0)`,
+		[]interface{}{12.0},
+	},
+	{
+		`(list 12)`,
+		[]interface{}{int64(12)},
+	},
+	{
+		`(list 12 3.14)`,
+		[]interface{}{int64(12), 3.14},
+	},
+	{
+		`(list 12.0 "do")`,
+		[]interface{}{12.0, "do"},
+	},
+	{
+		`(list (vec 12 3.14))`,
+		[]interface{}{12.0, 3.14},
+	},
+
+	// list?
+	{
+		`(list? (list))`,
+		true,
+	},
+	{
+		`(list? (vec))`,
+		false,
+	},
+	{
+		`(list? 1)`,
+		false,
+	},
+	{
+		`(list? (list) (list))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+
+	// dict
+	{
+		`(dict)`,
+		map[interface{}]interface{}{},
+	},
+	{
+		`(dict "d" 12.0)`,
+		map[interface{}]interface{}{"d": 12.0},
+	},
+	{
+		`(dict "d")`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+
+	// dict?
+	{
+		`(dict? (dict))`,
+		true,
+	},
+	{
+		`(dict? (vec))`,
+		false,
+	},
+	{
+		`(dict? 1)`,
+		false,
+	},
+	{
+		`(dict? (dict) (dict))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+
+	// dict-keys
+	{
+		`(dict-keys (dict))`,
+		[]interface{}{},
+	},
+	{
+		`(dict-keys (dict "d" 12.0))`,
+		[]interface{}{"d"},
+	},
+	{
+		`(dict-keys)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(dict-keys "d")`,
+		errorf(`twik source:1:2: dict-keys expects a dictionary`),
+	},
 
 	// +
 	{
