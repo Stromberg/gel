@@ -21,8 +21,10 @@ func FindModule(name string) *Module {
 }
 
 // RegisterModule registers a new Module.
-func RegisterModule(module *Module) {
-	registeredModules[module.Name] = module
+func RegisterModules(modules ...*Module) {
+	for _, m := range modules {
+		registeredModules[m.Name] = m
+	}
 }
 
 // FindFunction finds the Func with the given name and the Module it is in.

@@ -3,6 +3,9 @@ package gel
 import (
 	"errors"
 	"fmt"
+	"math"
+	"math/rand"
+	"time"
 
 	"github.com/Stromberg/gel/ast"
 )
@@ -24,6 +27,8 @@ var GlobalsModule = &Module{
 		&Func{Name: "-", F: minusFn},
 		&Func{Name: "*", F: mulFn},
 		&Func{Name: "/", F: divFn},
+		&Func{Name: "min", F: minFn},
+		&Func{Name: "max", F: maxFn},
 		&Func{Name: "or", F: orFn},
 		&Func{Name: "and", F: andFn},
 		&Func{Name: "if", F: ifFn},
@@ -53,10 +58,14 @@ var GlobalsModule = &Module{
 		&Func{Name: "vec-map", F: vecMapFn},
 		&Func{Name: "apply", F: applyFn},
 		&Func{Name: "vec-apply", F: vecApplyFn},
+		&Func{Name: "vec-rand", F: vecRandFn},
 		&Func{Name: "reduce", F: reduceFn},
+		&Func{Name: "skip", F: skipFn},
+		&Func{Name: "take", F: takeFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "identity", F: "(func (x) x)"},
+		&LispFunc{Name: "empty?", F: "(func (x) (== (len x) 0))"},
 	},
 }
 
@@ -213,6 +222,21 @@ var vecRepeatFn = ErrFunc(func(args ...interface{}) (value interface{}, err erro
 	}
 	return res, nil
 }, CheckArity(2))
+
+var vecRandFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	n, ok := args[0].(int64)
+	if !ok {
+		return nil, errParameterType
+	}
+
+	rand.Seed(time.Now().UnixNano())
+
+	res := make([]float64, n)
+	for i := range res {
+		res[i] = rand.Float64()
+	}
+	return res, nil
+}, CheckArity(1))
 
 var vecRangeFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	res := []float64{}
@@ -555,6 +579,46 @@ var mulFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	return resi, nil
 }, ParamsToSameBaseType(), ParamsSlicify())
 
+var minFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	var resf = math.MaxFloat64
+	var f bool
+	for _, arg := range args {
+		switch arg := arg.(type) {
+		case int64:
+			resf = math.Min(resf, float64(arg))
+		case float64:
+			resf = math.Min(resf, arg)
+			f = true
+		default:
+			return nil, fmt.Errorf("cannot min %#v", arg)
+		}
+	}
+	if f {
+		return resf, nil
+	}
+	return int64(resf), nil
+}, CheckArityAtLeast(1))
+
+var maxFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	var resf = -math.MaxFloat64
+	var f bool
+	for _, arg := range args {
+		switch arg := arg.(type) {
+		case int64:
+			resf = math.Max(resf, float64(arg))
+		case float64:
+			resf = math.Max(resf, arg)
+			f = true
+		default:
+			return nil, fmt.Errorf("cannot max %#v", arg)
+		}
+	}
+	if f {
+		return resf, nil
+	}
+	return int64(resf), nil
+}, CheckArityAtLeast(1))
+
 var divFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	if len(args) < 2 {
 		return nil, errors.New("function \"/\" takes two or more arguments")
@@ -607,6 +671,63 @@ var divFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	}
 	return resi, nil
 }, ParamsToSameBaseType(), ParamsSlicify())
+
+var skipFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	n := int(args[0].(int64))
+
+	if !IsSlice(args[1]) {
+		return nil, errParameterType
+	}
+
+	switch args[1].(type) {
+	case []interface{}:
+		s := args[1].([]interface{})
+		if len(s) <= n {
+			return []interface{}(nil), nil
+		}
+		return s[n:len(s)], nil
+	case []float64:
+		s := args[1].([]float64)
+		if len(s) <= n {
+			return []float64(nil), nil
+		}
+		return s[n:len(s)], nil
+	}
+	return nil, errParameterType
+}, CheckArity(2), ParamToInt64(0))
+
+var takeFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	n := int(args[0].(int64))
+
+	if !IsSlice(args[1]) {
+		return nil, errParameterType
+	}
+
+	switch args[1].(type) {
+	case []interface{}:
+		s := args[1].([]interface{})
+		if len(s) <= n {
+			n = len(s) - 1
+		}
+
+		if n <= 0 {
+			return []interface{}(nil), nil
+		}
+
+		return s[0:n], nil
+	case []float64:
+		s := args[1].([]float64)
+		if len(s) <= n {
+			n = len(s) - 1
+		}
+
+		if n <= 0 {
+			return []float64(nil), nil
+		}
+		return s[0:n], nil
+	}
+	return nil, errParameterType
+}, CheckArity(2), ParamToInt64(0))
 
 func andFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	if len(args) == 0 {

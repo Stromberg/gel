@@ -20,8 +20,8 @@ type gelExtender struct {
 // NewGel creates a new extender for id.
 // exprStr is the gel expression to calculate.
 // baseEnv is the environment to use to evaluate the expression.
-func NewGel(id, exprStr string, baseEnv *gel.Env, modules ...*gel.Module) Extender {
-	gel, err := gel.New(exprStr, modules...)
+func NewGel(id, exprStr string, baseEnv *gel.Env) Extender {
+	gel, err := gel.New(exprStr)
 	if err != nil {
 		return nil
 	}
@@ -39,8 +39,8 @@ func NewGel(id, exprStr string, baseEnv *gel.Env, modules ...*gel.Module) Extend
 // All the its dependencies in the Store must also be float64 slices.
 // exprStr is the gel expression to calculate.
 // baseEnv is the environment to use to evaluate the expression.
-func NewGelOnFloat64Slice(id, exprStr string, baseEnv *gel.Env, modules ...*gel.Module) *gelExtender {
-	gel, err := gel.New(exprStr, modules...)
+func NewGelOnFloat64Slice(id, exprStr string, baseEnv *gel.Env) *gelExtender {
+	gel, err := gel.New(exprStr)
 	if err != nil {
 		return nil
 	}

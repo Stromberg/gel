@@ -604,6 +604,16 @@ var evalList = []struct {
 		[]float64{6.0, 6.0},
 	},
 
+	// vec-rand
+	{
+		`(vec-rand)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	// {
+	// 	`(vec-rand 50)`,
+	// 	[]float64{0.5},
+	// },
+
 	// len
 	{
 		`(len (dict))`,
@@ -836,6 +846,50 @@ var evalList = []struct {
 		errorf("twik source:1:2: Vectors of different length"),
 	},
 
+	// min
+	{
+		`(min)`,
+		errorf("twik source:1:2: Wrong number of parameters"),
+	},
+	{
+		`(min 1)`,
+		1,
+	},
+	{
+		`(min 1.0)`,
+		1.0,
+	},
+	{
+		`(min 12 33 4)`,
+		4,
+	},
+	{
+		`(min 12.0 33.0 4.0)`,
+		4.0,
+	},
+
+	// max
+	{
+		`(max)`,
+		errorf("twik source:1:2: Wrong number of parameters"),
+	},
+	{
+		`(max 1)`,
+		1,
+	},
+	{
+		`(max 1.0)`,
+		1.0,
+	},
+	{
+		`(max 12 33 4)`,
+		33,
+	},
+	{
+		`(max 12.0 33.0 4.0)`,
+		33.0,
+	},
+
 	// ==
 	{
 		`(== "a" "a")`,
@@ -861,6 +915,67 @@ var evalList = []struct {
 	}, {
 		`(==)`,
 		errorf("twik source:1:2: == takes two values"),
+	},
+
+	// skip
+	{
+		`(skip 1 (vec))`,
+		[]float64(nil),
+	},
+	{
+		`(skip 1 (list))`,
+		[]interface{}(nil),
+	},
+	{
+		`(skip 1 (vec 1 2))`,
+		[]float64{2},
+	},
+	{
+		`(skip 1 (list 1 2))`,
+		[]interface{}{int64(2)},
+	},
+
+	// take
+	{
+		`(take 1 (vec))`,
+		[]float64(nil),
+	},
+	{
+		`(take 1 (list))`,
+		[]interface{}(nil),
+	},
+	{
+		`(take 1 (vec 1 2))`,
+		[]float64{1},
+	},
+	{
+		`(take 1 (list 1 2))`,
+		[]interface{}{int64(1)},
+	},
+
+	{
+		`(take 3 (vec 1 2 3 4 5 6))`,
+		[]float64{1, 2, 3},
+	},
+	{
+		`(take 2 (list 1 2 3 4 5 6))`,
+		[]interface{}{int64(1), int64(2)},
+	},
+
+	// empty?
+	{
+		`(empty? (vec))`,
+		true,
+	}, {
+		`(empty? (list))`,
+		true,
+	},
+	{
+		`(empty? (vec 1))`,
+		false,
+	}, {
+		`(empty? (list 1))`,
+		false,
 	},
 
 	// !=

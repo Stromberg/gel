@@ -2,11 +2,12 @@ package gel
 
 import (
 	"fmt"
+	"math"
 	"strings"
 )
 
 func init() {
-	RegisterModule(StdLibModule)
+	RegisterModules(StdLibModule)
 }
 
 var StdLibModule = &Module{
@@ -26,5 +27,14 @@ var StdLibModule = &Module{
 			format := args[0].(string)
 			return fmt.Sprintf(format, args[1:]...)
 		}, CheckArityAtLeast(1))},
+		&Func{Name: "math.Pow", F: SimpleFunc(math.Pow, CheckArity(2), ParamToFloat64(0), ParamToFloat64(1))},
+		&Func{Name: "nan?", F: SimpleFunc(math.IsNaN, CheckArity(1), ParamToFloat64(0))},
+		&Func{Name: "pos-inf?", F: SimpleFunc(func(v float64) bool { return math.IsInf(v, 0) }, CheckArity(1), ParamToFloat64(0))},
+	},
+	LispFuncs: []*LispFunc{
+		&LispFunc{Name: "cap", F: "(func (lower upper) (func (x) (max lower (min upper x))))"},
+		&LispFunc{Name: "pow", F: "(func (n) (func (x) (math.Pow x n)))"},
+		&LispFunc{Name: "with-default", F: "(func (d) (func (x) (if (or (nan? x) (pos-inf? x)) d x)))"},
+		&LispFunc{Name: "positive", F: "(func (d) (func (x) (if (or (nan? x) (pos-inf? x) (< x 0)) d x)))"},
 	},
 }

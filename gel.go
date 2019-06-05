@@ -14,14 +14,13 @@ import (
 
 // Gel is the language expression handler.
 type Gel struct {
-	node    ast.Node
-	fset    *ast.FileSet
-	code    string
-	modules []*Module
+	node ast.Node
+	fset *ast.FileSet
+	code string
 }
 
 // New creates a new Gel from a code string
-func New(code string, modules ...*Module) (*Gel, error) {
+func New(code string) (*Gel, error) {
 	fset := NewFileSet()
 
 	node, err := ParseString(fset, "", code)
@@ -29,7 +28,7 @@ func New(code string, modules ...*Module) (*Gel, error) {
 		return nil, err
 	}
 
-	return &Gel{node, fset, code, modules}, nil
+	return &Gel{node, fset, code}, nil
 }
 
 func (g *Gel) Code() string {
@@ -50,7 +49,7 @@ func (g *Gel) Eval(env *Env) (interface{}, error) {
 }
 
 func (g *Gel) scope(env *Env) *Scope {
-	scope := NewScope(g.fset, g.modules...)
+	scope := NewScope(g.fset)
 	env.fillScope(scope)
 	return scope
 }
