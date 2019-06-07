@@ -44,12 +44,17 @@ func TestStdLibModuleMath(t *testing.T) {
 	test("(math.Pow 3 2)", float64(9))
 	test("(math.Pow 2 3)", float64(8))
 
+	test("(math.Sqrt 4)", float64(2))
+
 	test("((pow 3) 2)", float64(8))
 	test("((pow 2) 3)", float64(9))
 
 	test("(nan? 3)", false)
+	test("(nan? nan)", true)
 	test("(pos-inf? 3)", false)
 	test("((with-default 0.0) 3.0)", 3.0)
+	test("((with-default 0.0) nan)", 0.0)
 	test("((positive 1.0) 3.0)", 3.0)
 	test("((positive 1.0) -1.0)", 1.0)
+	test("((positive 1.0) nan)", 1.0)
 }

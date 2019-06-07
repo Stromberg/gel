@@ -73,36 +73,62 @@ var evalList = []struct {
 	{
 		`1`,
 		1,
-	}, {
+	},
+	{
 		`1.0`,
 		1.0,
-	}, {
+	},
+	{
 		`0x10`,
 		16,
-	}, {
+	},
+	{
 		`010`,
 		8,
-	}, {
+	},
+	{
 		`"foo\"bar"`,
 		`foo"bar`,
-	}, {
+	},
+	{
 		`foo`,
 		errorf("twik source:1:1: undefined symbol: foo"),
-	}, {
+	},
+	{
 		`(1)`,
 		errorf(`twik source:1:2: cannot use 1 as a function`),
-	}, {
+	},
+	{
 		`true`,
 		true,
-	}, {
+	},
+	{
 		`false`,
 		false,
-	}, {
+	},
+	{
 		`nil`,
 		nil,
-	}, {
+	},
+	{
 		`1 2 3`,
 		3,
+	},
+	{
+		"; fff",
+		nil,
+	},
+	{
+		"; fff\n1",
+		1,
+	},
+	{
+		"(; fff\n+ 1 2)",
+		3,
+	},
+	{
+		" ; ffff\n1",
+		1,
 	},
 
 	// error
@@ -291,6 +317,80 @@ var evalList = []struct {
 		`(get (list "d") 1)`,
 		errorf(`twik source:1:2: Key not found`),
 	},
+	{
+		`(get (vec 12.0) -1)`,
+		12.0,
+	},
+	{
+		`(get (list "d") -1)`,
+		"d",
+	},
+	{
+		`(get (vec 12.0 13.0) -1)`,
+		13.0,
+	},
+	{
+		`(get (list "d" 3) -1)`,
+		3,
+	},
+	{
+		`(get (vec 12.0 13.0) -2)`,
+		12.0,
+	},
+	{
+		`(get (list "d" 3) -2)`,
+		"d",
+	},
+	{
+		`(get (vec 12.0 13.0) -3)`,
+		errorf(`twik source:1:2: Key not found`),
+	},
+	{
+		`(get (list "d" 3) -3)`,
+		errorf(`twik source:1:2: Key not found`),
+	},
+
+	// sub
+	{
+		`(sub (vec))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(sub (list))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(sub (vec 12.0) 0)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(sub (list "d") 0)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(sub (vec 12.0 13) 0 1)`,
+		[]float64{12.0},
+	},
+	{
+		`(sub (list "d" "f" 12) 0 1)`,
+		[]interface{}{"d"},
+	},
+	{
+		`(sub (vec 12.0 13 14) 1 3)`,
+		[]float64{13.0, 14},
+	},
+	{
+		`(sub (list "d" "f" 12) 1 3)`,
+		[]interface{}{"f", int64(12)},
+	},
+	{
+		`(sub (vec 12.0 13 14) 1 -1)`,
+		[]float64{13.0, 14},
+	},
+	{
+		`(sub (list "d" "f" 12) 1 -1)`,
+		[]interface{}{"f", int64(12)},
+	},
 
 	// contains?
 	{
@@ -462,6 +562,44 @@ var evalList = []struct {
 	{
 		`(map (func (x) (+ 1.0 x)) (list 12.0 3))`,
 		[]interface{}{13.0, 4.0},
+	},
+
+	// filter
+	{
+		`(filter (func (x) (+ 1.0 x)))`,
+		errorf(`twik source:1:2: filter takes two arguments`),
+	},
+	{
+		`(filter (func (x) (+ 1.0 x)) (list 1 2))`,
+		errorf(`twik source:1:2: callback must return bool`),
+	},
+	{
+		`(filter (func (x) (> x 12.0)) (list 12.0))`,
+		[]interface{}{},
+	},
+	{
+		`(filter (func (x) (> x 11.0)) (list 12.0))`,
+		[]interface{}{12.0},
+	},
+	{
+		`(filter (func (x) (> x 11.0)) (list 12.0 10.0 14.0))`,
+		[]interface{}{12.0, 14.0},
+	},
+	{
+		`(filter (func (x) (+ 1.0 x)) (vec 1 2))`,
+		errorf(`twik source:1:2: callback must return bool`),
+	},
+	{
+		`(filter (func (x) (> x 12.0)) (vec 12.0))`,
+		[]float64{},
+	},
+	{
+		`(filter (func (x) (> x 11.0)) (vec 12.0))`,
+		[]float64{12.0},
+	},
+	{
+		`(filter (func (x) (> x 11.0)) (vec 12.0 10.0 14.0))`,
+		[]float64{12.0, 14.0},
 	},
 
 	// vec-map

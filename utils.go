@@ -43,6 +43,21 @@ func IsSlice(v interface{}) bool {
 	}
 }
 
+func CopySlice(v interface{}) (interface{}, error) {
+	switch v.(type) {
+	case []interface{}:
+		res := make([]interface{}, len(v.([]interface{})))
+		copy(res, v.([]interface{}))
+		return res, nil
+	case []float64:
+		res := make([]float64, len(v.([]float64)))
+		copy(res, v.([]float64))
+		return res, nil
+	default:
+		return nil, errParameterType
+	}
+}
+
 func IsAnySlice(vs ...interface{}) bool {
 	for _, v := range vs {
 		if IsSlice(v) {

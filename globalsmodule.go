@@ -16,6 +16,7 @@ var GlobalsModule = &Module{
 		&Func{Name: "true", F: true},
 		&Func{Name: "false", F: false},
 		&Func{Name: "nil", F: nil},
+		&Func{Name: "nan", F: math.NaN()},
 		&Func{Name: "error", F: errorFn},
 		&Func{Name: "==", F: eqFn},
 		&Func{Name: "<", F: lessThanFn},
@@ -46,6 +47,7 @@ var GlobalsModule = &Module{
 		&Func{Name: "dict?", F: isDictFn},
 		&Func{Name: "dict-keys", F: dictKeysFn},
 		&Func{Name: "get", F: getFn},
+		&Func{Name: "sub", F: subFn},
 		&Func{Name: "contains?", F: containsFn},
 		&Func{Name: "update", F: updateFn},
 		&Func{Name: "len", F: lenFn},
@@ -60,6 +62,7 @@ var GlobalsModule = &Module{
 		&Func{Name: "vec-apply", F: vecApplyFn},
 		&Func{Name: "vec-rand", F: vecRandFn},
 		&Func{Name: "reduce", F: reduceFn},
+		&Func{Name: "filter", F: filterFn},
 		&Func{Name: "skip", F: skipFn},
 		&Func{Name: "take", F: takeFn},
 	},
@@ -287,6 +290,14 @@ var getFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 			return nil, errParameterType
 		}
 
+		if i < 0 {
+			if -int(i) > len(v) {
+				return nil, errors.New("Key not found")
+			}
+
+			i = int64(len(v)) + i
+		}
+
 		if int(i) >= len(v) {
 			return nil, errors.New("Key not found")
 		}
@@ -298,6 +309,14 @@ var getFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 			return nil, errParameterType
 		}
 
+		if i < 0 {
+			if -int(i) > len(v) {
+				return nil, errors.New("Key not found")
+			}
+
+			i = int64(len(v)) + i
+		}
+
 		if int(i) >= len(v) {
 			return nil, errors.New("Key not found")
 		}
@@ -305,6 +324,74 @@ var getFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 	}
 	return nil, errParameterType
 }, CheckArity(2))
+
+var subFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
+	switch args[0].(type) {
+	case []interface{}:
+		v := args[0].([]interface{})
+		i1, ok := args[1].(int64)
+		if !ok {
+			return nil, errParameterType
+		}
+		i2, ok := args[2].(int64)
+		if !ok {
+			return nil, errParameterType
+		}
+
+		if i1 < 0 {
+			if -int(i1) > len(v) {
+				return nil, errors.New("Key not found")
+			}
+
+			i1 = int64(len(v)) + i1
+		}
+
+		if i2 < 0 {
+			if -int(i2) > len(v) {
+				return nil, errors.New("Key not found")
+			}
+
+			i2 = int64(len(v)) + i2 + 1
+		}
+
+		if int(i1) >= len(v) || int(i2) > len(v) || i1 >= i2 {
+			return nil, errors.New("Key not found")
+		}
+		return v[i1:i2], nil
+	case []float64:
+		v := args[0].([]float64)
+		i1, ok := args[1].(int64)
+		if !ok {
+			return nil, errParameterType
+		}
+		i2, ok := args[2].(int64)
+		if !ok {
+			return nil, errParameterType
+		}
+
+		if i1 < 0 {
+			if -int(i1) > len(v) {
+				return nil, errors.New("Key not found")
+			}
+
+			i1 = int64(len(v)) + i1
+		}
+
+		if i2 < 0 {
+			if -int(i2) > len(v) {
+				return nil, errors.New("Key not found")
+			}
+
+			i2 = int64(len(v)) + i2 + 1
+		}
+
+		if int(i1) >= len(v) || int(i2) > len(v) || i1 >= i2 {
+			return nil, errors.New("Key not found")
+		}
+		return v[i1:i2], nil
+	}
+	return nil, errParameterType
+}, CheckArity(3))
 
 var containsFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 	switch args[0].(type) {
@@ -977,6 +1064,70 @@ func reduceFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 		}
 
 		return r, nil
+	}
+
+	return nil, errParameterType
+}
+
+func filterFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) != 2 {
+		return nil, errors.New(`filter takes two arguments`)
+	}
+
+	fn, err := scope.Eval(args[0])
+	if err != nil {
+		return nil, scope.errorAt(args[0], err)
+	}
+	listRaw, err := scope.Eval(args[1])
+	if err != nil {
+		return nil, scope.errorAt(args[1], err)
+	}
+
+	switch listRaw.(type) {
+	case []interface{}:
+		list := listRaw.([]interface{})
+
+		res := []interface{}{}
+		if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+			for _, v := range list {
+				r, err := fn(v)
+				if err != nil {
+					return nil, err
+				}
+				b, ok := r.(bool)
+				if !ok {
+					return nil, errors.New("callback must return bool")
+				}
+
+				if b {
+					res = append(res, v)
+				}
+			}
+
+			return res, nil
+		}
+	case []float64:
+		list := listRaw.([]float64)
+
+		res := []float64{}
+		if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+			for _, v := range list {
+				r, err := fn(v)
+				if err != nil {
+					return nil, err
+				}
+				b, ok := r.(bool)
+				if !ok {
+					return nil, errors.New("callback must return bool")
+				}
+
+				if b {
+					res = append(res, v)
+				}
+			}
+
+			return res, nil
+		}
 	}
 
 	return nil, errParameterType
