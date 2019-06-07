@@ -110,19 +110,19 @@ func ParamToInt64(p int) Adapter {
 	}
 }
 
-//ParamToInt return an Adapter to convert the p nth param to int64 type
+//ParamToInt return an Adapter to convert the p nth param to int type
 func ParamToInt(p int) Adapter {
 	return func(values ...interface{}) ([]interface{}, error) {
 		switch values[p].(type) {
 		case int:
 			return values, nil
 		case int64:
-			v := values[p].(float64)
+			v := values[p].(int64)
 			values[p] = int(v)
 			return values, nil
 		case float64:
 			v := values[p].(float64)
-			values[p] = int64(v)
+			values[p] = int(v)
 			return values, nil
 		default:
 			return []interface{}{}, errParameterType
