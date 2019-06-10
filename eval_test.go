@@ -245,6 +245,17 @@ var evalList = []struct {
 		[]interface{}{12.0, 3.14},
 	},
 
+	// list2vec
+
+	{
+		`(list2vec (list 12 3.14))`,
+		[]float64{12.0, 3.14},
+	},
+	{
+		`(list2vec (list 12 "d"))`,
+		errorf(`twik source:1:2: Error in parameter type`),
+	},
+
 	// list?
 	{
 		`(list? (list))`,
@@ -1033,6 +1044,21 @@ var evalList = []struct {
 		errorf("twik source:1:2: Vectors of different length"),
 	},
 
+	// %
+	{
+		`(%)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	}, {
+		`(% 1)`,
+		errorf("twik source:1:2: Wrong number of parameters"),
+	}, {
+		`(% 5 2)`,
+		1,
+	}, {
+		`(% 16 7 2)`,
+		0,
+	},
+
 	// min
 	{
 		`(min)`,
@@ -1075,6 +1101,42 @@ var evalList = []struct {
 	{
 		`(max 12.0 33.0 4.0)`,
 		33.0,
+	},
+
+	// int
+	{
+		`(int)`,
+		errorf("twik source:1:2: Wrong number of parameters"),
+	},
+	{
+		`(int 2)`,
+		int64(2),
+	},
+	{
+		`(int 12.0)`,
+		int64(12),
+	},
+	{
+		`(int "")`,
+		errorf("twik source:1:2: Error in parameter type"),
+	},
+
+	// float
+	{
+		`(float)`,
+		errorf("twik source:1:2: Wrong number of parameters"),
+	},
+	{
+		`(float 2)`,
+		2.0,
+	},
+	{
+		`(float 12.0)`,
+		12.0,
+	},
+	{
+		`(float "")`,
+		errorf("twik source:1:2: Error in parameter type"),
 	},
 
 	// ==
