@@ -21,6 +21,7 @@ type Gel struct {
 
 // New creates a new Gel from a code string
 func New(code string) (*Gel, error) {
+
 	fset := NewFileSet()
 
 	node, err := ParseString(fset, "", code)

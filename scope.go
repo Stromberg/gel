@@ -31,12 +31,11 @@ func (e *Error) Error() string {
 
 // NewScope returns a new scope for evaluating logic that was parsed into fset.
 func NewScope(fset *ast.FileSet) *Scope {
-	vars := make(map[string]interface{})
-	for _, f := range GlobalsModule.Funcs {
-		vars[f.Name] = f.F
-	}
+	modules := Modules()
 
-	for _, m := range registeredModules {
+	vars := make(map[string]interface{})
+
+	for _, m := range modules {
 		for _, f := range m.Funcs {
 			vars[f.Name] = f.F
 		}
@@ -44,20 +43,7 @@ func NewScope(fset *ast.FileSet) *Scope {
 
 	scope := &Scope{fset: fset, vars: vars}
 
-	for _, f := range GlobalsModule.LispFuncs {
-		expr := fmt.Sprintf("(var %s %s)", f.Name, f.F)
-		node, err := ParseString(fset, "", expr)
-		if err != nil {
-			return nil
-		}
-
-		_, err = scope.Eval(node)
-		if err != nil {
-			return nil
-		}
-	}
-
-	for _, m := range registeredModules {
+	for _, m := range modules {
 		for _, f := range m.LispFuncs {
 			expr := fmt.Sprintf("(var %s %s)", f.Name, f.F)
 			node, err := ParseString(fset, "", expr)

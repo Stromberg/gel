@@ -1,29 +1,29 @@
 package gel
 
-var registeredModules = map[string]*Module{}
+var registeredModules = []*Module{}
+
+var BasePath = "."
 
 // Modules returns all registered modules
 func Modules() (res []*Module) {
-	for _, v := range registeredModules {
-		res = append(res, v)
-	}
-	return
+	return registeredModules
 }
 
 // FindModule finds the registered Module with the given name.
 func FindModule(name string) *Module {
-	m, ok := registeredModules[name]
-	if !ok {
-		return nil
+	for _, m := range registeredModules {
+		if m.Name == name {
+			return m
+		}
 	}
 
-	return m
+	return nil
 }
 
 // RegisterModule registers a new Module.
 func RegisterModules(modules ...*Module) {
 	for _, m := range modules {
-		registeredModules[m.Name] = m
+		registeredModules = append(registeredModules, m)
 	}
 }
 

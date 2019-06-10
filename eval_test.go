@@ -131,6 +131,32 @@ var evalList = []struct {
 		1,
 	},
 
+	// eval
+	{
+		"(eval \"(+ 1 2)\")",
+		int64(3),
+	},
+
+	// slurp
+	{
+		"(slurp \"nonexistent.gel\")",
+		errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
+	},
+	{
+		"(slurp \"test.gel\")",
+		"(+ 1 2)",
+	},
+
+	// eval-file
+	{
+		"(eval-file \"nonexistent.gel\")",
+		errorf("twik source:1:33: open nonexistent.gel: no such file or directory"),
+	},
+	{
+		"(eval-file \"test.gel\")",
+		int64(3),
+	},
+
 	// error
 	{
 		"(\nerror \"error message\")",
@@ -209,6 +235,13 @@ var evalList = []struct {
 	},
 	{
 		`(list (vec 12 3.14))`,
+		[]interface{}{[]float64{12.0, 3.14}},
+	},
+
+	// vec2list
+
+	{
+		`(vec2list (vec 12 3.14))`,
 		[]interface{}{12.0, 3.14},
 	},
 
@@ -497,11 +530,11 @@ var evalList = []struct {
 	// apply
 	{
 		`(apply)`,
-		errorf(`twik source:1:2: apply takes two or more arguments`),
+		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
 		`(apply 1)`,
-		errorf(`twik source:1:2: apply takes two or more arguments`),
+		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
 		`(apply 1 2)`,
@@ -518,6 +551,14 @@ var evalList = []struct {
 	{
 		`(apply (func (x) (+ 2.0 x)) (list 1 2 3))`,
 		[]interface{}{3.0, 4.0, 5.0},
+	},
+	{
+		`(apply (func (x y) (* x y)) (list 1.0 2.0 3.0) (list 1 2 3))`,
+		[]interface{}{1.0, 4.0, 9.0},
+	},
+	{
+		`(apply * (list (vec 2.0 3.0) (vec 4.0 5.0)) (list (vec 2.0 3.0) (vec 4.0 5.0)))`,
+		[]interface{}{[]float64{4, 9}, []float64{16, 25}},
 	},
 
 	// reduce
@@ -695,6 +736,14 @@ var evalList = []struct {
 	},
 	{
 		`(vec-apply (func (x y) (+ x y)) (vec 1 2 3) (vec 10 21 33))`,
+		[]float64{11, 23, 36},
+	},
+	{
+		`(vec-apply (func (x y) (+ x y)) (list (vec 1 2 3) (vec 10 21 33)))`,
+		[]float64{11, 23, 36},
+	},
+	{
+		`(vec-apply (func (x y) (+ x y)) (list (vec 1 2 3)) (vec 10 21 33))`,
 		[]float64{11, 23, 36},
 	},
 

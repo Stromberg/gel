@@ -3,16 +3,24 @@ package gel
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"math/rand"
+	"path"
 	"time"
 
 	"github.com/Stromberg/gel/ast"
 )
 
+func init() {
+	RegisterModules(GlobalsModule)
+}
+
 var GlobalsModule = &Module{
 	Name: "globals",
 	Funcs: []*Func{
+		&Func{Name: "eval", F: evalFn},
+		&Func{Name: "slurp", F: slurpFn},
 		&Func{Name: "true", F: true},
 		&Func{Name: "false", F: false},
 		&Func{Name: "nil", F: nil},
@@ -40,6 +48,7 @@ var GlobalsModule = &Module{
 		&Func{Name: "func", F: funcFn},
 		&Func{Name: "for", F: forFn},
 		&Func{Name: "vec", F: vecFn},
+		&Func{Name: "vec2list", F: vecToListFn},
 		&Func{Name: "list", F: listFn},
 		&Func{Name: "vec?", F: isVecFn},
 		&Func{Name: "list?", F: isListFn},
@@ -69,6 +78,7 @@ var GlobalsModule = &Module{
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "identity", F: "(func (x) x)"},
 		&LispFunc{Name: "empty?", F: "(func (x) (== (len x) 0))"},
+		&LispFunc{Name: "eval-file", F: "(func (s) (eval (slurp s)))"},
 	},
 }
 
@@ -80,6 +90,33 @@ func errorFn(args ...interface{}) (value interface{}, err error) {
 	}
 	return nil, errors.New("error function takes a single string argument")
 }
+
+var evalFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
+	code, ok := args[0].(string)
+	if !ok {
+		return nil, errParameterType
+	}
+
+	g, err := New(code)
+	if err != nil {
+		return nil, fmt.Errorf("Error in eval: %v", err)
+	}
+
+	return g.Eval(NewEnv())
+}, CheckArity(1))
+
+var slurpFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
+	file, ok := args[0].(string)
+	if !ok {
+		return nil, errParameterType
+	}
+	realPath := path.Join(BasePath, file)
+	data, err := ioutil.ReadFile(realPath)
+	if err != nil {
+		return nil, err
+	}
+	return string(data), nil
+}, CheckArity(1))
 
 func vecFn(args ...interface{}) (value interface{}, err error) {
 	if len(args) == 0 {
@@ -154,8 +191,17 @@ func listFn(args ...interface{}) (value interface{}, err error) {
 		return []interface{}{}, nil
 	}
 
-	if list, ok := args[0].([]interface{}); ok {
-		return list, nil
+	res := make([]interface{}, len(args))
+	for i, arg := range args {
+		res[i] = arg
+	}
+
+	return res, nil
+}
+
+func vecToListFn(args ...interface{}) (value interface{}, err error) {
+	if len(args) != 1 {
+		return nil, errWrongNumberPar
 	}
 
 	if list, ok := args[0].([]float64); ok {
@@ -166,7 +212,7 @@ func listFn(args ...interface{}) (value interface{}, err error) {
 		return res, nil
 	}
 
-	return args, nil
+	return nil, errParameterType
 }
 
 var rangeFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
@@ -1133,23 +1179,13 @@ func filterFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	return nil, errParameterType
 }
 
-func applyFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
-	if len(args) < 2 {
-		return nil, errors.New(`apply takes two or more arguments`)
-	}
-
-	fn, err := scope.Eval(args[0])
-	if err != nil {
-		return nil, scope.errorAt(args[0], err)
-	}
+var applyFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	fn := args[0]
 
 	lists := [][]interface{}{}
 	for _, arg := range args[1:] {
-		listRaw, err := scope.Eval(arg)
-		if err != nil {
-			return nil, scope.errorAt(arg, err)
-		}
-		list, ok := listRaw.([]interface{})
+		fmt.Printf("listRaw %v\n", arg)
+		list, ok := arg.([]interface{})
 		if !ok {
 			return nil, errParameterType
 		}
@@ -1157,6 +1193,10 @@ func applyFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	}
 
 	l := len(lists[0])
+
+	fmt.Printf("Lists %v\n", lists)
+	fmt.Printf("#Lists %v\n", len(lists))
+	fmt.Printf("List Len %v\n", l)
 
 	res := []interface{}{}
 	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
@@ -1168,6 +1208,7 @@ func applyFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 				}
 				fnArgs[j] = list[i]
 			}
+			fmt.Printf("Args: %v\n", fnArgs)
 			r, err := fn(fnArgs...)
 			if err != nil {
 				return nil, err
@@ -1179,7 +1220,7 @@ func applyFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	}
 
 	return nil, errParameterType
-}
+}, CheckArityAtLeast(2))
 
 func vecApplyFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	if len(args) < 2 {
@@ -1197,11 +1238,21 @@ func vecApplyFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 		if err != nil {
 			return nil, scope.errorAt(arg, err)
 		}
-		list, ok := listRaw.([]float64)
-		if !ok {
+		switch listRaw.(type) {
+		case []float64:
+			list := listRaw.([]float64)
+			lists = append(lists, list)
+		case []interface{}:
+			for _, m := range listRaw.([]interface{}) {
+				list, ok := m.([]float64)
+				if !ok {
+					return nil, errParameterType
+				}
+				lists = append(lists, list)
+			}
+		default:
 			return nil, errParameterType
 		}
-		lists = append(lists, list)
 	}
 
 	l := len(lists[0])
