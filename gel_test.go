@@ -24,29 +24,41 @@ func TestMissing(t *testing.T) {
 	assert.Nil(t, err)
 
 	e := NewEnv()
-	assert.Zero(t, len(g.Missing(e)))
+	m, err := g.Missing(e)
+	assert.NoError(t, err)
+	assert.Zero(t, len(m))
 
 	g, err = New("(+ 1)")
-	assert.Nil(t, err)
-	assert.Zero(t, len(g.Missing(e)))
+	assert.NoError(t, err)
+	m, err = g.Missing(e)
+	assert.NoError(t, err)
+	assert.Zero(t, len(m))
 
 	g, err = New("(+ x)")
-	assert.Nil(t, err)
-	assert.EqualValues(t, g.Missing(e), []string{"x"})
+	assert.NoError(t, err)
+	m, err = g.Missing(e)
+	assert.NoError(t, err)
+	assert.EqualValues(t, []string{"x"}, m)
 
 	g, err = New("(+ x (f y))")
-	assert.Nil(t, err)
-	assert.EqualValues(t, g.Missing(e), []string{"x", "f", "y"})
+	assert.NoError(t, err)
+	m, err = g.Missing(e)
+	assert.NoError(t, err)
+	assert.EqualValues(t, []string{"x", "f", "y"}, m)
 
 	e.AddVar("x", 1)
 
 	g, err = New("(+ x)")
-	assert.Nil(t, err)
-	assert.Zero(t, len(g.Missing(e)))
+	assert.NoError(t, err)
+	m, err = g.Missing(e)
+	assert.NoError(t, err)
+	assert.Zero(t, len(m))
 
 	g, err = New("(+ x (f y))")
-	assert.Nil(t, err)
-	assert.EqualValues(t, g.Missing(e), []string{"f", "y"})
+	assert.NoError(t, err)
+	m, err = g.Missing(e)
+	assert.NoError(t, err)
+	assert.EqualValues(t, []string{"f", "y"}, m)
 }
 
 func TestMissingVar(t *testing.T) {
@@ -54,7 +66,9 @@ func TestMissingVar(t *testing.T) {
 
 	g, err := New("(var x 1.0) (+ x 3.0)")
 	assert.Nil(t, err)
-	assert.Zero(t, len(g.Missing(e)))
+	m, err := g.Missing(e)
+	assert.NoError(t, err)
+	assert.Zero(t, len(m))
 
 	r, err := g.Eval(e)
 	assert.Nil(t, err)
@@ -68,19 +82,19 @@ func TestEval(t *testing.T) {
 	e := NewEnv()
 
 	r, err := g.Eval(e)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Nil(t, r)
 
 	g, err = New("(+ 1)")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	r, err = g.Eval(e)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.EqualValues(t, r, 1)
 
 	e.AddVar("x", 1.0)
 
 	g, err = New("(+ x 2.14)")
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	r, err = g.Eval(e)
 	assert.NoError(t, err)
 	assert.EqualValues(t, r, 3.14)

@@ -15,7 +15,7 @@ type Store interface {
 type Extender interface {
 	ID() string
 	String() string
-	Missing(store Store) []string
+	Missing(store Store) ([]string, error)
 	Extend(store Store) error
 }
 
@@ -26,7 +26,10 @@ func Extend(store Store, extenders ...Extender) (err error) {
 
 	for _, e := range extenders {
 		es[e.ID()] = e
-		ms := e.Missing(store)
+		ms, err := e.Missing(store)
+		if err != nil {
+			return err
+		}
 		if len(ms) == 0 {
 			err = e.Extend(store)
 			if err != nil {
@@ -50,7 +53,10 @@ func Extend(store Store, extenders ...Extender) (err error) {
 				return fmt.Errorf("Missing extender for %s", k)
 			}
 
-			ms := e.Missing(store)
+			ms, err := e.Missing(store)
+			if err != nil {
+				return err
+			}
 			if len(ms) == 0 {
 				err = e.Extend(store)
 				if err != nil {

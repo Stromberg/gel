@@ -30,9 +30,9 @@ func (e *funcExtender) String() string {
 	return ""
 }
 
-func (e *funcExtender) Missing(store Store) (res []string) {
+func (e *funcExtender) Missing(store Store) (res []string, err error) {
 	if _, ok := store.Get(e.id); ok {
-		return nil
+		return nil, nil
 	}
 
 	for _, v := range e.vars {
@@ -41,7 +41,7 @@ func (e *funcExtender) Missing(store Store) (res []string) {
 		}
 	}
 
-	return res
+	return res, nil
 }
 
 func (e *funcExtender) Extend(store Store) error {

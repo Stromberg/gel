@@ -58,3 +58,52 @@ func TestStdLibModuleMath(t *testing.T) {
 	test("((positive 1.0) -1.0)", 1.0)
 	test("((positive 1.0) nan)", 1.0)
 }
+
+func TestStdLibModuleCombinations(t *testing.T) {
+	test := func(expr string, expected interface{}) {
+		g, err := gel.New(expr)
+		assert.NoError(t, err)
+		assert.NotNil(t, g)
+		s, err := g.Eval(gel.NewEnv())
+		assert.NoError(t, err)
+		assert.Equal(t, expected, s)
+	}
+
+	test(
+		"(combinations (list))",
+		[][]interface{}{},
+	)
+	test(
+		"(combinations (list 1.0))",
+		[][]interface{}{
+			[]interface{}{1.0},
+		},
+	)
+	test(
+		"(combinations (list 1.0 2.0))",
+		[][]interface{}{
+			[]interface{}{1.0},
+			[]interface{}{2.0},
+		},
+	)
+	test(
+		"(combinations (list 1.0 2.0) (list 3.0))",
+		[][]interface{}{
+			[]interface{}{1.0, 3.0},
+			[]interface{}{2.0, 3.0},
+		},
+	)
+	test(
+		"(combinations (list 1.0 2.0) (list 3.0 4.0) (list 5.0 6.0))",
+		[][]interface{}{
+			[]interface{}{1.0, 3.0, 5.0},
+			[]interface{}{1.0, 3.0, 6.0},
+			[]interface{}{1.0, 4.0, 5.0},
+			[]interface{}{1.0, 4.0, 6.0},
+			[]interface{}{2.0, 3.0, 5.0},
+			[]interface{}{2.0, 3.0, 6.0},
+			[]interface{}{2.0, 4.0, 5.0},
+			[]interface{}{2.0, 4.0, 6.0},
+		},
+	)
+}

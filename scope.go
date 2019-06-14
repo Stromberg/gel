@@ -30,7 +30,7 @@ func (e *Error) Error() string {
 }
 
 // NewScope returns a new scope for evaluating logic that was parsed into fset.
-func NewScope(fset *ast.FileSet) *Scope {
+func NewScope(fset *ast.FileSet) (*Scope, error) {
 	modules := Modules()
 
 	vars := make(map[string]interface{})
@@ -46,19 +46,19 @@ func NewScope(fset *ast.FileSet) *Scope {
 	for _, m := range modules {
 		for _, f := range m.LispFuncs {
 			expr := fmt.Sprintf("(var %s %s)", f.Name, f.F)
-			node, err := ParseString(fset, "", expr)
+			node, err := ParseString(fset, fmt.Sprintf("%v:%v", m.Name, f.Name), expr)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 
 			_, err = scope.Eval(node)
 			if err != nil {
-				return nil
+				return nil, err
 			}
 		}
 	}
 
-	return scope
+	return scope, nil
 }
 
 // Create defines a new symbol with the given value in the s scope.
@@ -121,6 +121,11 @@ func (s *Scope) errorAt(node ast.Node, err error) error {
 
 // Eval evaluates node in the s scope and returns the resulting value.
 func (s *Scope) Eval(node ast.Node) (value interface{}, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = s.errorAt(node, fmt.Errorf("%v", r))
+		}
+	}()
 	switch node := node.(type) {
 	case *ast.Symbol:
 		value, err := s.Get(node.Name)

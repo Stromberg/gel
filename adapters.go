@@ -61,6 +61,9 @@ func ParamsToSameBaseType() Adapter {
 		} else if IsAnyFloats(values...) {
 			for i := range values {
 				switch values[i].(type) {
+				case int:
+					v := values[i].(int)
+					values[i] = float64(v)
 				case int64:
 					v := values[i].(int64)
 					values[i] = float64(v)

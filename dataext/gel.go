@@ -61,19 +61,22 @@ func (e *gelExtender) String() string {
 	return e.expr
 }
 
-func (e *gelExtender) Missing(store Store) (res []string) {
+func (e *gelExtender) Missing(store Store) (res []string, err error) {
 	if _, ok := store.Get(e.id); ok {
-		return nil
+		return nil, nil
 	}
 
-	needed := e.gel.Missing(e.env)
+	needed, err := e.gel.Missing(e.env)
+	if err != nil {
+		return nil, err
+	}
 	for _, n := range needed {
 		if _, ok := store.Get(n); !ok {
 			res = append(res, n)
 		}
 	}
 
-	return res
+	return res, nil
 }
 
 func (e *gelExtender) Extend(store Store) error {
@@ -91,7 +94,10 @@ func (e *gelExtender) Extend(store Store) error {
 func (e *gelExtender) extend(store Store) error {
 	env := e.env.Copy()
 
-	needed := e.gel.Missing(env)
+	needed, err := e.gel.Missing(env)
+	if err != nil {
+		return err
+	}
 	for _, n := range needed {
 		v, ok := store.Get(n)
 		if !ok {
@@ -111,7 +117,11 @@ func (e *gelExtender) extend(store Store) error {
 }
 
 func (e *gelExtender) extendOnFloat64Slice(store Store) error {
-	needed := e.gel.Missing(e.env)
+	needed, err := e.gel.Missing(e.env)
+	if err != nil {
+		return err
+	}
+
 	vars := make(map[string][]float64)
 	l := 0
 	for _, n := range needed {

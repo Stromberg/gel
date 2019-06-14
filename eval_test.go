@@ -19,7 +19,8 @@ func (S) TestEval(c *C) {
 		fset := gel.NewFileSet()
 		node, err := gel.ParseString(fset, "", test.code)
 		c.Assert(err, IsNil)
-		scope := gel.NewScope(fset)
+		scope, err := gel.NewScope(fset)
+		c.Assert(err, IsNil)
 		scope.Create("sprintf", sprintfFn)
 		scope.Create("list", listFn)
 		scope.Create("append", appendFn)
@@ -150,11 +151,15 @@ var evalList = []struct {
 	// eval-file
 	{
 		"(eval-file \"nonexistent.gel\")",
-		errorf("twik source:1:33: open nonexistent.gel: no such file or directory"),
+		errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
 	},
 	{
 		"(eval-file \"test.gel\")",
 		int64(3),
+	},
+	{
+		"(eval-file \"testerror.gel\")",
+		errorf("testerror.gel:1:8: undefined symbol: x"),
 	},
 
 	// error
@@ -394,6 +399,26 @@ var evalList = []struct {
 		errorf(`twik source:1:2: Key not found`),
 	},
 
+	// first
+	{
+		`(first (list "d" 3))`,
+		"d",
+	},
+	{
+		`(first (vec 4 3))`,
+		float64(4),
+	},
+
+	// rest
+	{
+		`(rest (list "d" 3))`,
+		[]interface{}{int64(3)},
+	},
+	{
+		`(rest (vec 4 3))`,
+		[]float64{3},
+	},
+
 	// sub
 	{
 		`(sub (vec))`,
@@ -474,37 +499,37 @@ var evalList = []struct {
 		false,
 	},
 
-	// update
+	// update!
 	{
-		`(update (dict))`,
+		`(update! (dict))`,
 		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
-		`(update (vec))`,
+		`(update! (vec))`,
 		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
-		`(update (list))`,
+		`(update! (list))`,
 		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
-		`(update (dict "d" 12.0) "a" 13)`,
+		`(update! (dict "d" 12.0) "a" 13)`,
 		map[interface{}]interface{}{"a": int64(13), "d": 12.0},
 	},
 	{
-		`(update (vec 12.0) 0 13)`,
+		`(update! (vec 12.0) 0 13)`,
 		[]float64{13.0},
 	},
 	{
-		`(update (list "d") 0 45)`,
+		`(update! (list "d") 0 45)`,
 		[]interface{}{int64(45)},
 	},
 	{
-		`(update (vec 12.0) 1 34)`,
+		`(update! (vec 12.0) 1 34)`,
 		errorf(`twik source:1:2: Out of range`),
 	},
 	{
-		`(update (list "d") 1 "a")`,
+		`(update! (list "d") 1 "a")`,
 		errorf(`twik source:1:2: Out of range`),
 	},
 
@@ -536,6 +561,46 @@ var evalList = []struct {
 	{
 		`(append (list "d") 1 "a")`,
 		[]interface{}{"d", int64(1), "a"},
+	},
+
+	// concat
+	{
+		`(concat (dict))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(concat (vec) (vec 12.0))`,
+		[]float64{12.0},
+	},
+	{
+		`(concat (list) (list "d"))`,
+		[]interface{}{"d"},
+	},
+	{
+		`(concat (vec 12.0) (vec 1 34))`,
+		[]float64{12.0, 1.0, 34},
+	},
+	{
+		`(concat (list "d") (list 1 "a"))`,
+		[]interface{}{"d", int64(1), "a"},
+	},
+
+	// flatten
+	{
+		`(flatten (list 12.0))`,
+		[]interface{}{12.0},
+	},
+
+	// sort-asc
+	{
+		`(sort-asc < (list 12.0 3.0 5.0))`,
+		[]interface{}{3.0, 5.0, 12.0},
+	},
+
+	// sort-desc
+	{
+		`(sort-desc < (list 12.0 3.0 5.0))`,
+		[]interface{}{12.0, 5.0, 3.0},
 	},
 
 	// apply
@@ -697,6 +762,10 @@ var evalList = []struct {
 		`(range 1.0 6.0 2.5)`,
 		[]interface{}{1.0, 3.5},
 	},
+	{
+		`(range 6.0 1.0 -2.5)`,
+		[]interface{}{6.0, 3.5},
+	},
 
 	// vec-range
 	{
@@ -722,6 +791,10 @@ var evalList = []struct {
 	{
 		`(vec-range 1.0 6.0 2.5)`,
 		[]float64{1.0, 3.5},
+	},
+	{
+		`(vec-range 6.0 1.0 -2.5)`,
+		[]float64{6.0, 3.5},
 	},
 
 	// vec-apply
@@ -800,6 +873,20 @@ var evalList = []struct {
 	{
 		`(vec-repeat 2 6.0)`,
 		[]float64{6.0, 6.0},
+	},
+
+	// reverse
+	{
+		`(reverse)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(reverse (vec 1 2))`,
+		[]float64{2, 1},
+	},
+	{
+		`(reverse (list 1 2))`,
+		[]interface{}{int64(2), int64(1)},
 	},
 
 	// vec-rand

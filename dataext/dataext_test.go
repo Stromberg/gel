@@ -64,10 +64,11 @@ func TestExtendExpressionSimple(t *testing.T) {
 	e := NewGel("v3", "(* v1 v2)", env)
 	assert.NotNil(t, e)
 
-	missing := e.Missing(store)
+	missing, err := e.Missing(store)
+	assert.NoError(t, err)
 	assert.Equal(t, 0, len(missing))
 
-	err := Extend(store, e)
+	err = Extend(store, e)
 	assert.NoError(t, err)
 	res, ok := store.Get("v3")
 	assert.True(t, ok)
@@ -113,10 +114,11 @@ func TestExtendExpressionVar(t *testing.T) {
 	e := NewGel("v3", "(var x 1.0) (* v1 v2)", env)
 	assert.NotNil(t, e)
 
-	missing := e.Missing(store)
+	missing, err := e.Missing(store)
+	assert.NoError(t, err)
 	assert.Equal(t, 0, len(missing))
 
-	err := Extend(store, e)
+	err = Extend(store, e)
 	assert.NoError(t, err)
 	res, ok := store.Get("v3")
 	assert.True(t, ok)
@@ -161,10 +163,11 @@ func TestExtendFuncSimple(t *testing.T) {
 		return mulSlice(v1.([]float64), v2.([]float64)), nil
 	})
 
-	missing := e.Missing(store)
+	missing, err := e.Missing(store)
+	assert.NoError(t, err)
 	assert.Equal(t, 0, len(missing))
 
-	err := Extend(store, e)
+	err = Extend(store, e)
 	assert.NoError(t, err)
 
 	res, ok := store.Get("v3")

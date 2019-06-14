@@ -21,10 +21,14 @@ type Gel struct {
 
 // New creates a new Gel from a code string
 func New(code string) (*Gel, error) {
+	return NewWithName(code, "")
+}
+
+func NewWithName(code string, fname string) (*Gel, error) {
 
 	fset := NewFileSet()
 
-	node, err := ParseString(fset, "", code)
+	node, err := ParseString(fset, fname, code)
 	if err != nil {
 		return nil, err
 	}
@@ -38,25 +42,37 @@ func (g *Gel) Code() string {
 
 // Missing returns the symbols that are missing
 // in the environment in order to evaluate the expression.
-func (g *Gel) Missing(env *Env) []string {
-	scope := g.scope(env)
-	return missing(scope, g.node)
+func (g *Gel) Missing(env *Env) ([]string, error) {
+	scope, err := g.scope(env)
+	if err != nil {
+		return nil, err
+	}
+	return missing(scope, g.node), nil
 }
 
 // Eval evaluates the expression in the given environment.
 func (g *Gel) Eval(env *Env) (interface{}, error) {
-	scope := g.scope(env)
+	scope, err := g.scope(env)
+	if err != nil {
+		return nil, err
+	}
 	return scope.Eval(g.node)
 }
 
-func (g *Gel) scope(env *Env) *Scope {
-	scope := NewScope(g.fset)
+func (g *Gel) scope(env *Env) (*Scope, error) {
+	scope, err := NewScope(g.fset)
+	if err != nil {
+		return nil, err
+	}
 	env.fillScope(scope)
-	return scope
+	return scope, err
 }
 
 func (g *Gel) Repl(env *Env) error {
-	scope := g.scope(env)
+	scope, err := g.scope(env)
+	if err != nil {
+		return err
+	}
 
 	state, err := terminal.MakeRaw(1)
 	if err != nil {

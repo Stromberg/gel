@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/rand"
 	"path"
+	"sort"
 	"time"
 
 	"github.com/Stromberg/gel/ast"
@@ -20,6 +21,7 @@ var GlobalsModule = &Module{
 	Name: "globals",
 	Funcs: []*Func{
 		&Func{Name: "eval", F: evalFn},
+		&Func{Name: "eval-file", F: evalFileFn},
 		&Func{Name: "slurp", F: slurpFn},
 		&Func{Name: "true", F: true},
 		&Func{Name: "false", F: false},
@@ -62,12 +64,14 @@ var GlobalsModule = &Module{
 		&Func{Name: "get", F: getFn},
 		&Func{Name: "sub", F: subFn},
 		&Func{Name: "contains?", F: containsFn},
-		&Func{Name: "update", F: updateFn},
+		&Func{Name: "update!", F: updateFn},
 		&Func{Name: "len", F: lenFn},
 		&Func{Name: "append", F: appendFn},
+		&Func{Name: "concat", F: concatFn},
 		&Func{Name: "range", F: rangeFn},
 		&Func{Name: "vec-range", F: vecRangeFn},
 		&Func{Name: "repeat", F: repeatFn},
+		&Func{Name: "reverse", F: reverseFn},
 		&Func{Name: "vec-repeat", F: vecRepeatFn},
 		&Func{Name: "map", F: mapFn},
 		&Func{Name: "vec-map", F: vecMapFn},
@@ -76,13 +80,17 @@ var GlobalsModule = &Module{
 		&Func{Name: "vec-rand", F: vecRandFn},
 		&Func{Name: "reduce", F: reduceFn},
 		&Func{Name: "filter", F: filterFn},
+		&Func{Name: "flatten", F: flattenFn},
 		&Func{Name: "skip", F: skipFn},
 		&Func{Name: "take", F: takeFn},
+		&Func{Name: "sort-asc", F: sortAscFn},
+		&Func{Name: "sort-desc", F: sortDescFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "identity", F: "(func (x) x)"},
 		&LispFunc{Name: "empty?", F: "(func (x) (== (len x) 0))"},
-		&LispFunc{Name: "eval-file", F: "(func (s) (eval (slurp s)))"},
+		&LispFunc{Name: "first", F: "(func (s) (get s 0))"},
+		&LispFunc{Name: "rest", F: "(func (s) (skip 1 s))"},
 	},
 }
 
@@ -120,6 +128,26 @@ var slurpFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 		return nil, err
 	}
 	return string(data), nil
+}, CheckArity(1))
+
+var evalFileFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
+	file, ok := args[0].(string)
+	if !ok {
+		return nil, errParameterType
+	}
+	realPath := path.Join(BasePath, file)
+	data, err := ioutil.ReadFile(realPath)
+	if err != nil {
+		return nil, err
+	}
+	code := string(data)
+
+	g, err := NewWithName(code, file)
+	if err != nil {
+		return nil, fmt.Errorf("Error in eval: %v", err)
+	}
+
+	return g.Eval(NewEnv())
 }, CheckArity(1))
 
 func vecFn(args ...interface{}) (value interface{}, err error) {
@@ -247,15 +275,36 @@ func listToVecFn(args ...interface{}) (value interface{}, err error) {
 var rangeFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	res := []interface{}{}
 
-	switch args[0].(type) {
+	switch start := args[0].(type) {
 	case int64:
-		for i := args[0].(int64); i < args[1].(int64); i += args[2].(int64) {
-			res = append(res, i)
+		step := args[2].(int64)
+		end := args[1].(int64)
+		if step == 0 {
+			return nil, errors.New("Invalid argument")
+		} else if step > 0 {
+			for i := start; i < end; i += step {
+				res = append(res, i)
+			}
+		} else {
+			for i := start; i > end; i += step {
+				res = append(res, i)
+			}
 		}
+
 		return res, nil
 	case float64:
-		for i := args[0].(float64); i < args[1].(float64); i += args[2].(float64) {
-			res = append(res, i)
+		step := args[2].(float64)
+		end := args[1].(float64)
+		if step == 0 {
+			return nil, errors.New("Invalid argument")
+		} else if step > 0 {
+			for i := start; i < end; i += step {
+				res = append(res, i)
+			}
+		} else {
+			for i := start; i > end; i += step {
+				res = append(res, i)
+			}
 		}
 		return res, nil
 	}
@@ -319,15 +368,36 @@ var vecRandFn = ErrFunc(func(args ...interface{}) (value interface{}, err error)
 var vecRangeFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	res := []float64{}
 
-	switch args[0].(type) {
+	switch start := args[0].(type) {
 	case int64:
-		for i := args[0].(int64); i < args[1].(int64); i += args[2].(int64) {
-			res = append(res, float64(i))
+		step := args[2].(int64)
+		end := args[1].(int64)
+		if step == 0 {
+			return nil, errors.New("Invalid argument")
+		} else if step > 0 {
+			for i := start; i < end; i += step {
+				res = append(res, float64(i))
+			}
+		} else {
+			for i := start; i > end; i += step {
+				res = append(res, float64(i))
+			}
 		}
+
 		return res, nil
 	case float64:
-		for i := args[0].(float64); i < args[1].(float64); i += args[2].(float64) {
-			res = append(res, i)
+		step := args[2].(float64)
+		end := args[1].(float64)
+		if step == 0 {
+			return nil, errors.New("Invalid argument")
+		} else if step > 0 {
+			for i := start; i < end; i += step {
+				res = append(res, i)
+			}
+		} else {
+			for i := start; i > end; i += step {
+				res = append(res, i)
+			}
 		}
 		return res, nil
 	}
@@ -541,15 +611,17 @@ var updateFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 }, CheckArity(3))
 
 var appendFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
-	switch args[0].(type) {
+	switch arg := args[0].(type) {
 	case []interface{}:
-		v := args[0].([]interface{})
+		v := make([]interface{}, len(arg))
+		copy(v, arg)
 		for _, n := range args[1:] {
 			v = append(v, n)
 		}
 		return v, nil
 	case []float64:
-		v := args[0].([]float64)
+		v := make([]float64, len(arg))
+		copy(v, arg)
 
 		for _, n := range args[1:] {
 			f, ok := n.(float64)
@@ -561,6 +633,36 @@ var appendFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 				f = float64(iv)
 			}
 			v = append(v, f)
+		}
+
+		return v, nil
+	}
+	return nil, errParameterType
+}, CheckArityAtLeast(2))
+
+var concatFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
+	switch arg := args[0].(type) {
+	case []interface{}:
+		v := make([]interface{}, len(arg))
+		copy(v, arg)
+		for _, n := range args[1:] {
+			v2, ok := n.([]interface{})
+			if !ok {
+				return nil, errParameterType
+			}
+			v = append(v, v2...)
+		}
+		return v, nil
+	case []float64:
+		v := make([]float64, len(arg))
+		copy(v, arg)
+
+		for _, n := range args[1:] {
+			v2, ok := n.([]float64)
+			if !ok {
+				return nil, errParameterType
+			}
+			v = append(v, v2...)
 		}
 
 		return v, nil
@@ -886,6 +988,36 @@ var skipFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	return nil, errParameterType
 }, CheckArity(2), ParamToInt64(0))
 
+var reverseFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	if !IsSlice(args[0]) {
+		return nil, errParameterType
+	}
+
+	switch arg := args[0].(type) {
+	case []interface{}:
+		l := len(arg)
+		if l == 0 {
+			return []interface{}(nil), nil
+		}
+		res := make([]interface{}, l)
+		for i := range arg {
+			res[i] = arg[l-i-1]
+		}
+		return res, nil
+	case []float64:
+		l := len(arg)
+		if l == 0 {
+			return []float64(nil), nil
+		}
+		res := make([]float64, l)
+		for i := range arg {
+			res[i] = arg[l-i-1]
+		}
+		return res, nil
+	}
+	return nil, errParameterType
+}, CheckArity(1))
+
 var takeFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	n := int(args[0].(int64))
 
@@ -1133,6 +1265,72 @@ func mapFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	return nil, errParameterType
 }
 
+func sortAscFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) != 2 {
+		return nil, errors.New(`sort-asc takes two arguments`)
+	}
+
+	fn, err := scope.Eval(args[0])
+	if err != nil {
+		return nil, scope.errorAt(args[0], err)
+	}
+	listRaw, err := scope.Eval(args[1])
+	if err != nil {
+		return nil, scope.errorAt(args[1], err)
+	}
+
+	list, ok := listRaw.([]interface{})
+	if !ok {
+		return nil, errParameterType
+	}
+
+	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+		res := make([]interface{}, len(list))
+		copy(res, list)
+		sort.Slice(res, func(i, j int) bool {
+			v, _ := fn(res[i], res[j])
+			return v.(bool)
+		})
+
+		return res, nil
+	}
+
+	return nil, errParameterType
+}
+
+func sortDescFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) != 2 {
+		return nil, errors.New(`sort-desc takes two arguments`)
+	}
+
+	fn, err := scope.Eval(args[0])
+	if err != nil {
+		return nil, scope.errorAt(args[0], err)
+	}
+	listRaw, err := scope.Eval(args[1])
+	if err != nil {
+		return nil, scope.errorAt(args[1], err)
+	}
+
+	list, ok := listRaw.([]interface{})
+	if !ok {
+		return nil, errParameterType
+	}
+
+	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+		res := make([]interface{}, len(list))
+		copy(res, list)
+		sort.Slice(res, func(i, j int) bool {
+			v, _ := fn(res[j], res[i])
+			return v.(bool)
+		})
+
+		return res, nil
+	}
+
+	return nil, errParameterType
+}
+
 func reduceFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	if len(args) != 3 {
 		return nil, errors.New(`reduce takes three arguments`)
@@ -1272,6 +1470,24 @@ var applyFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 
 	return nil, errParameterType
 }, CheckArityAtLeast(2))
+
+var flattenFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	res := []interface{}{}
+	var sub func(args []interface{})
+	sub = func(args []interface{}) {
+		for _, arg := range args {
+			switch arg.(type) {
+			case []interface{}:
+				sub(arg.([]interface{}))
+			default:
+				res = append(res, arg)
+			}
+		}
+	}
+	sub(args)
+
+	return res, nil
+}, CheckArityAtLeast(1))
 
 func vecApplyFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	if len(args) < 2 {

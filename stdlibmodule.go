@@ -31,6 +31,7 @@ var StdLibModule = &Module{
 		&Func{Name: "math.Sqrt", F: SimpleFunc(math.Sqrt, CheckArity(1), ParamToFloat64(0))},
 		&Func{Name: "nan?", F: SimpleFunc(math.IsNaN, CheckArity(1), ParamToFloat64(0))},
 		&Func{Name: "pos-inf?", F: SimpleFunc(func(v float64) bool { return math.IsInf(v, 0) }, CheckArity(1), ParamToFloat64(0))},
+		&Func{Name: "combinations", F: combinationsFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "cap", F: "(func (lower upper) (func (x) (max lower (min upper x))))"},
@@ -39,3 +40,29 @@ var StdLibModule = &Module{
 		&LispFunc{Name: "positive", F: "(func (d) (func (x) (if (or (nan? x) (pos-inf? x) (< x 0)) d x)))"},
 	},
 }
+
+var combinationsFn = SimpleFunc(func(lists ...[]interface{}) interface{} {
+	res := [][]interface{}{}
+
+	cpy := func(src []interface{}, v interface{}) []interface{} {
+		dst := make([]interface{}, len(src)+1)
+		copy(dst, src)
+		dst[len(src)] = v
+		return dst
+	}
+
+	var impl func(base []interface{}, li int)
+	impl = func(base []interface{}, li int) {
+		if li == len(lists) {
+			res = append(res, base)
+			return
+		}
+
+		l := lists[li]
+		for _, v := range l {
+			impl(cpy(base, v), li+1)
+		}
+	}
+	impl(nil, 0)
+	return res
+}, CheckArityAtLeast(1))
