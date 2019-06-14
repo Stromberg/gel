@@ -327,6 +327,20 @@ func (fset *FileSet) PosInfo(pos Pos) *PosInfo {
 	return pinfo
 }
 
+// PosInfo returns the line and column for pos, and the name the
+// file containing that position was parsed with.
+func (fset *FileSet) Code(node Node) string {
+	pos := node.Pos()
+	l := node.End()
+	for _, f := range fset.files {
+		if pos <= f.base+Pos(len(f.code)) {
+			offset := int(pos - f.base)
+			return f.code[offset : offset+int(l-pos)]
+		}
+	}
+	return ""
+}
+
 // PosInfo holds human-oriented positioning details about a Pos.
 type PosInfo struct {
 	Name   string

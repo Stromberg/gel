@@ -1200,6 +1200,24 @@ var evalList = []struct {
 		33.0,
 	},
 
+	// code
+	{
+		`(code (dict))`,
+		"(dict)",
+	},
+	{
+		`(code (max 12.0 33.0 4.0))`,
+		"(max 12.0 33.0 4.0)",
+	},
+	{
+		`(code (func name (x) (if (> x 2) 2 3)))`,
+		"(func name (x) (if (> x 2) 2 3))",
+	},
+	{
+		`(eval (code (max 12.0 33.0 4.0)))`,
+		33.0,
+	},
+
 	// int
 	{
 		`(int)`,
@@ -1542,10 +1560,10 @@ var evalList = []struct {
 		3,
 	}, {
 		`(func)`,
-		errorf("twik source:1:2: func takes three or more arguments"),
+		errorf("twik source:1:2: func takes two or more arguments"),
 	}, {
 		`(func x)`,
-		errorf("twik source:1:2: func takes three or more arguments"),
+		errorf("twik source:1:2: func takes two or more arguments"),
 	}, {
 		`(func 1 2)`,
 		errorf("twik source:1:2: func takes a list of parameters"),

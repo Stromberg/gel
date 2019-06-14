@@ -119,6 +119,10 @@ func (s *Scope) errorAt(node ast.Node, err error) error {
 	return &Error{err, s.fset.PosInfo(node.Pos())}
 }
 
+func (s *Scope) Code(node ast.Node) string {
+	return s.fset.Code(node)
+}
+
 // Eval evaluates node in the s scope and returns the resulting value.
 func (s *Scope) Eval(node ast.Node) (value interface{}, err error) {
 	defer func() {

@@ -50,6 +50,7 @@ var GlobalsModule = &Module{
 		&Func{Name: "var", F: varFn},
 		&Func{Name: "set", F: setFn},
 		&Func{Name: "do", F: doFn},
+		&Func{Name: "code", F: codeFn},
 		&Func{Name: "func", F: funcFn},
 		&Func{Name: "for", F: forFn},
 		&Func{Name: "vec", F: vecFn},
@@ -1169,9 +1170,17 @@ func doFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	return value, nil
 }
 
+func codeFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) != 1 {
+		return nil, errors.New("code takes one argument")
+	}
+
+	return scope.Code(args[0]), nil
+}
+
 func funcFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	if len(args) < 2 {
-		return nil, errors.New(`func takes three or more arguments`)
+		return nil, errors.New(`func takes two or more arguments`)
 	}
 	i := 0
 	var name string
