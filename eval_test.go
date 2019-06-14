@@ -409,6 +409,16 @@ var evalList = []struct {
 		float64(4),
 	},
 
+	// last
+	{
+		`(last (list "d" 3))`,
+		3,
+	},
+	{
+		`(last (vec 4 3))`,
+		float64(3),
+	},
+
 	// rest
 	{
 		`(rest (list "d" 3))`,
