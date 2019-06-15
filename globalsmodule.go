@@ -1240,29 +1240,31 @@ func funcFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	return fn, nil
 }
 
-func mapFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
-	if len(args) != 2 {
-		return nil, errors.New(`map takes two arguments`)
+var mapFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	fn := args[0]
+
+	lists := [][]interface{}{}
+	for _, arg := range args[1:] {
+		list, ok := arg.([]interface{})
+		if !ok {
+			return nil, errParameterType
+		}
+		lists = append(lists, list)
 	}
 
-	fn, err := scope.Eval(args[0])
-	if err != nil {
-		return nil, scope.errorAt(args[0], err)
-	}
-	listRaw, err := scope.Eval(args[1])
-	if err != nil {
-		return nil, scope.errorAt(args[1], err)
-	}
-
-	list, ok := listRaw.([]interface{})
-	if !ok {
-		return nil, errParameterType
-	}
+	l := len(lists[0])
 
 	res := []interface{}{}
 	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
-		for _, v := range list {
-			r, err := fn(v)
+		for i := 0; i < l; i++ {
+			fnArgs := make([]interface{}, len(lists))
+			for j, list := range lists {
+				if len(list) != l {
+					return nil, errors.New("Lists must be of same length")
+				}
+				fnArgs[j] = list[i]
+			}
+			r, err := fn(fnArgs...)
 			if err != nil {
 				return nil, err
 			}
@@ -1273,7 +1275,7 @@ func mapFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	}
 
 	return nil, errParameterType
-}
+}, CheckArityAtLeast(2))
 
 func sortAscFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	if len(args) != 2 {
@@ -1447,39 +1449,17 @@ func filterFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 var applyFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	fn := args[0]
 
-	lists := [][]interface{}{}
-	for _, arg := range args[1:] {
-		list, ok := arg.([]interface{})
-		if !ok {
-			return nil, errParameterType
-		}
-		lists = append(lists, list)
+	fnArgs, ok := args[1].([]interface{})
+	if !ok {
+		return nil, errParameterType
 	}
 
-	l := len(lists[0])
-
-	res := []interface{}{}
 	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
-		for i := 0; i < l; i++ {
-			fnArgs := make([]interface{}, len(lists))
-			for j, list := range lists {
-				if len(list) != l {
-					return nil, errors.New("Lists must be of same length")
-				}
-				fnArgs[j] = list[i]
-			}
-			r, err := fn(fnArgs...)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, r)
-		}
-
-		return res, nil
+		return fn(fnArgs...)
 	}
 
 	return nil, errParameterType
-}, CheckArityAtLeast(2))
+}, CheckArity(2))
 
 var flattenFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	res := []interface{}{}
@@ -1499,37 +1479,36 @@ var flattenFn = ErrFunc(func(args ...interface{}) (value interface{}, err error)
 	return res, nil
 }, CheckArityAtLeast(1))
 
-func vecApplyFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
-	if len(args) < 2 {
-		return nil, errors.New(`vec-apply takes two or more arguments`)
+var vecApplyFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	fn := args[0]
+
+	list, ok := args[1].([]float64)
+	if !ok {
+		return nil, errParameterType
 	}
 
-	fn, err := scope.Eval(args[0])
-	if err != nil {
-		return nil, scope.errorAt(args[0], err)
+	fnArgs := make([]interface{}, len(list))
+	for i, v := range list {
+		fnArgs[i] = v
 	}
+
+	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+		return fn(fnArgs...)
+	}
+
+	return nil, errParameterType
+}, CheckArity(2))
+
+var vecMapFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	fn := args[0]
 
 	lists := [][]float64{}
 	for _, arg := range args[1:] {
-		listRaw, err := scope.Eval(arg)
-		if err != nil {
-			return nil, scope.errorAt(arg, err)
-		}
-		switch listRaw.(type) {
-		case []float64:
-			list := listRaw.([]float64)
-			lists = append(lists, list)
-		case []interface{}:
-			for _, m := range listRaw.([]interface{}) {
-				list, ok := m.([]float64)
-				if !ok {
-					return nil, errParameterType
-				}
-				lists = append(lists, list)
-			}
-		default:
+		list, ok := arg.([]float64)
+		if !ok {
 			return nil, errParameterType
 		}
+		lists = append(lists, list)
 	}
 
 	l := len(lists[0])
@@ -1548,65 +1527,18 @@ func vecApplyFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 			if err != nil {
 				return nil, err
 			}
-			f, ok := r.(float64)
+			v, ok := r.(float64)
 			if !ok {
-				vi, ok := r.(int64)
-				if !ok {
-					return nil, errParameterType
-				}
-				f = float64(vi)
+				return nil, errors.New("Expected function to return float64")
 			}
-			res = append(res, f)
+			res = append(res, v)
 		}
 
 		return res, nil
 	}
 
 	return nil, errParameterType
-}
-
-func vecMapFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
-	if len(args) != 2 {
-		return nil, errors.New(`vec-map takes two arguments`)
-	}
-
-	fn, err := scope.Eval(args[0])
-	if err != nil {
-		return nil, scope.errorAt(args[0], err)
-	}
-	listRaw, err := scope.Eval(args[1])
-	if err != nil {
-		return nil, scope.errorAt(args[1], err)
-	}
-
-	list, ok := listRaw.([]float64)
-	if !ok {
-		return nil, errParameterType
-	}
-
-	res := []float64{}
-	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
-		for _, v := range list {
-			r, err := fn(v)
-			if err != nil {
-				return nil, err
-			}
-			f, ok := r.(float64)
-			if !ok {
-				vi, ok := r.(int64)
-				if !ok {
-					return nil, errParameterType
-				}
-				f = float64(vi)
-			}
-			res = append(res, f)
-		}
-
-		return res, nil
-	}
-
-	return nil, errParameterType
-}
+}, CheckArityAtLeast(2))
 
 func forFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	if len(args) < 4 {

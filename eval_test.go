@@ -628,23 +628,23 @@ var evalList = []struct {
 	},
 	{
 		`(apply (func (x) (+ 2 x)) (list 2))`,
-		[]interface{}{int64(4)},
+		int64(4),
 	},
 	{
 		`(apply (func (x) (+ 2 x)) (list 1 2 3))`,
-		[]interface{}{int64(3), int64(4), int64(5)},
+		errorf(`twik source:1:2: anonymous function takes one argument`),
 	},
 	{
-		`(apply (func (x) (+ 2.0 x)) (list 1 2 3))`,
-		[]interface{}{3.0, 4.0, 5.0},
+		`(apply (func (x y z) (+ 2.0 x y z)) (list 1 2 3))`,
+		8.0,
 	},
 	{
 		`(apply (func (x y) (* x y)) (list 1.0 2.0 3.0) (list 1 2 3))`,
-		[]interface{}{1.0, 4.0, 9.0},
+		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
-		`(apply * (list (vec 2.0 3.0) (vec 4.0 5.0)) (list (vec 2.0 3.0) (vec 4.0 5.0)))`,
-		[]interface{}{[]float64{4, 9}, []float64{16, 25}},
+		`(apply * (list (vec 2.0 3.0) (vec 4.0 5.0)))`,
+		[]float64{8, 15},
 	},
 
 	// reduce
@@ -676,7 +676,7 @@ var evalList = []struct {
 	// map
 	{
 		`(map (dict))`,
-		errorf(`twik source:1:2: map takes two arguments`),
+		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
 		`(map (func (x) (+ 1.0 x)) (list 12.0))`,
@@ -689,6 +689,18 @@ var evalList = []struct {
 	{
 		`(map (func (x) (+ 1.0 x)) (list 12.0 3))`,
 		[]interface{}{13.0, 4.0},
+	},
+	{
+		`(map (func (x) (+ 2 x)) (list 1 2 3))`,
+		[]interface{}{int64(3), int64(4), int64(5)},
+	},
+	{
+		`(map (func (x) (+ 2.0 x)) (list 1 2 3))`,
+		[]interface{}{3.0, 4.0, 5.0},
+	},
+	{
+		`(map (func (x y) (* x y)) (list 1.0 2.0 3.0) (list 1 2 3))`,
+		[]interface{}{1.0, 4.0, 9.0},
 	},
 
 	// filter
@@ -732,7 +744,7 @@ var evalList = []struct {
 	// vec-map
 	{
 		`(vec-map (dict))`,
-		errorf(`twik source:1:2: vec-map takes two arguments`),
+		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
 		`(vec-map (func (x) (+ 1.0 x)) (vec 12.0))`,
@@ -745,6 +757,14 @@ var evalList = []struct {
 	{
 		`(vec-map (func (x) (+ 1.0 x)) (vec 12.0 3))`,
 		[]float64{13.0, 4},
+	},
+	{
+		`(vec-map (func (x) (+ 2.0 x)) (vec 1 2 3))`,
+		[]float64{3.0, 4.0, 5.0},
+	},
+	{
+		`(vec-map (func (x y) (* x y)) (vec 1.0 2.0 3.0) (vec 1 2 3))`,
+		[]float64{1.0, 4.0, 9.0},
 	},
 
 	// range
@@ -810,11 +830,11 @@ var evalList = []struct {
 	// vec-apply
 	{
 		`(vec-apply)`,
-		errorf(`twik source:1:2: vec-apply takes two or more arguments`),
+		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
 		`(vec-apply 1)`,
-		errorf(`twik source:1:2: vec-apply takes two or more arguments`),
+		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
 		`(vec-apply 1 2)`,
@@ -822,23 +842,19 @@ var evalList = []struct {
 	},
 	{
 		`(vec-apply (func (x) (+ 2 x)) (vec 2))`,
-		[]float64{4},
+		4.0,
 	},
 	{
 		`(vec-apply (func (x) (+ 2 x)) (vec 1 2 3))`,
-		[]float64{3, 4, 5},
+		errorf(`twik source:1:2: anonymous function takes one argument`),
 	},
 	{
-		`(vec-apply (func (x y) (+ x y)) (vec 1 2 3) (vec 10 21 33))`,
-		[]float64{11, 23, 36},
+		`(vec-apply (func (x y z) (+ 2.0 x y z)) (vec 1 2 3))`,
+		8.0,
 	},
 	{
-		`(vec-apply (func (x y) (+ x y)) (list (vec 1 2 3) (vec 10 21 33)))`,
-		[]float64{11, 23, 36},
-	},
-	{
-		`(vec-apply (func (x y) (+ x y)) (list (vec 1 2 3)) (vec 10 21 33))`,
-		[]float64{11, 23, 36},
+		`(vec-apply (func (x y) (* x y)) (list 1.0 2.0 3.0) (list 1 2 3))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 
 	// repeat
