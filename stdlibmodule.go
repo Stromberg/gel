@@ -42,7 +42,7 @@ var StdLibModule = &Module{
 }
 
 var combinationsFn = SimpleFunc(func(lists ...[]interface{}) interface{} {
-	res := [][]interface{}{}
+	res := []interface{}{}
 
 	cpy := func(src []interface{}, v interface{}) []interface{} {
 		dst := make([]interface{}, len(src)+1)

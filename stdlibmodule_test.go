@@ -71,31 +71,31 @@ func TestStdLibModuleCombinations(t *testing.T) {
 
 	test(
 		"(combinations (list))",
-		[][]interface{}{},
+		[]interface{}{},
 	)
 	test(
 		"(combinations (list 1.0))",
-		[][]interface{}{
+		[]interface{}{
 			[]interface{}{1.0},
 		},
 	)
 	test(
 		"(combinations (list 1.0 2.0))",
-		[][]interface{}{
+		[]interface{}{
 			[]interface{}{1.0},
 			[]interface{}{2.0},
 		},
 	)
 	test(
 		"(combinations (list 1.0 2.0) (list 3.0))",
-		[][]interface{}{
+		[]interface{}{
 			[]interface{}{1.0, 3.0},
 			[]interface{}{2.0, 3.0},
 		},
 	)
 	test(
 		"(combinations (list 1.0 2.0) (list 3.0 4.0) (list 5.0 6.0))",
-		[][]interface{}{
+		[]interface{}{
 			[]interface{}{1.0, 3.0, 5.0},
 			[]interface{}{1.0, 3.0, 6.0},
 			[]interface{}{1.0, 4.0, 5.0},
