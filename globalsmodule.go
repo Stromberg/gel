@@ -86,6 +86,7 @@ var GlobalsModule = &Module{
 		&Func{Name: "take", F: takeFn},
 		&Func{Name: "sort-asc", F: sortAscFn},
 		&Func{Name: "sort-desc", F: sortDescFn},
+		&Func{Name: "bind", F: bindFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "identity", F: "(func (x) x)"},
@@ -93,6 +94,8 @@ var GlobalsModule = &Module{
 		&LispFunc{Name: "first", F: "(func (s) (get s 0))"},
 		&LispFunc{Name: "rest", F: "(func (s) (skip 1 s))"},
 		&LispFunc{Name: "last", F: "(func (s) (if (empty? s) nil (get s (- (len s) 1))))"},
+		&LispFunc{Name: "inc", F: "(func (s) (+ s 1))"},
+		&LispFunc{Name: "dec", F: "(func (s) (- s 1))"},
 	},
 }
 
@@ -313,6 +316,26 @@ var rangeFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 
 	return nil, errParameterType
 }, CheckArity(3), ParamsToSameBaseType())
+
+func bindFn(args ...interface{}) (value interface{}, err error) {
+	if len(args) < 2 {
+		return nil, errors.New("bind takes 2 or more arguments")
+	}
+
+	fn, ok := args[0].(func(...interface{}) (interface{}, error))
+	if !ok {
+		return nil, errors.New("Expected function as first argument")
+	}
+
+	boundArgs := args[1:]
+
+	return func(args ...interface{}) (interface{}, error) {
+		allArgs := []interface{}{}
+		allArgs = append(allArgs, boundArgs...)
+		allArgs = append(allArgs, args...)
+		return fn(allArgs...)
+	}, nil
+}
 
 var repeatFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	n, ok := args[0].(int64)
@@ -1245,7 +1268,7 @@ var mapFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 
 	lists := [][]interface{}{}
 	for _, arg := range args[1:] {
-		list, ok := arg.([]interface{})
+		list, ok := ToList(arg)
 		if !ok {
 			return nil, errParameterType
 		}

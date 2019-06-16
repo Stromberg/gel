@@ -68,6 +68,25 @@ func IsAnySlice(vs ...interface{}) bool {
 	return false
 }
 
+func VecToList(vec []float64) []interface{} {
+	res := make([]interface{}, len(vec))
+	for i, v := range vec {
+		res[i] = v
+	}
+	return res
+}
+
+func ToList(data interface{}) (res []interface{}, ok bool) {
+	switch arg := data.(type) {
+	case []interface{}:
+		return arg, true
+	case []float64:
+		return VecToList(arg), true
+	}
+
+	return nil, false
+}
+
 func MakeAllEitherSliceOrValue(vs ...interface{}) ([]interface{}, error) {
 	if !IsAnySlice(vs...) {
 		return vs, nil

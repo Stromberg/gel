@@ -132,6 +132,26 @@ var evalList = []struct {
 		1,
 	},
 
+	// inc
+	{
+		"(inc 0)",
+		int64(1),
+	},
+	{
+		"(inc 1.0)",
+		2.0,
+	},
+
+	// dec
+	{
+		"(dec 0)",
+		int64(-1),
+	},
+	{
+		"(dec 1.0)",
+		0.0,
+	},
+
 	// eval
 	{
 		"(eval \"(+ 1 2)\")",
@@ -687,6 +707,10 @@ var evalList = []struct {
 		[]interface{}{int64(13)},
 	},
 	{
+		`(map (func (x) (+ 1 x)) (vec 12))`,
+		[]interface{}{13.0},
+	},
+	{
 		`(map (func (x) (+ 1.0 x)) (list 12.0 3))`,
 		[]interface{}{13.0, 4.0},
 	},
@@ -765,6 +789,16 @@ var evalList = []struct {
 	{
 		`(vec-map (func (x y) (* x y)) (vec 1.0 2.0 3.0) (vec 1 2 3))`,
 		[]float64{1.0, 4.0, 9.0},
+	},
+
+	// bind
+	{
+		`(bind)`,
+		errorf(`twik source:1:2: bind takes 2 or more arguments`),
+	},
+	{
+		`((bind + 1) 4)`,
+		int64(5),
 	},
 
 	// range
