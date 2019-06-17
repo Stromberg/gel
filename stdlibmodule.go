@@ -1,6 +1,7 @@
 package gel
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -32,6 +33,7 @@ var StdLibModule = &Module{
 		&Func{Name: "nan?", F: SimpleFunc(math.IsNaN, CheckArity(1), ParamToFloat64(0))},
 		&Func{Name: "pos-inf?", F: SimpleFunc(func(v float64) bool { return math.IsInf(v, 0) }, CheckArity(1), ParamToFloat64(0))},
 		&Func{Name: "combinations", F: combinationsFn},
+		&Func{Name: "transpose", F: transposeFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "cap", F: "(func (lower upper) (func (x) (max lower (min upper x))))"},
@@ -66,3 +68,32 @@ var combinationsFn = SimpleFunc(func(lists ...[]interface{}) interface{} {
 	impl(nil, 0)
 	return res
 }, CheckArityAtLeast(1))
+
+var transposeFn = ErrFunc(func(listOfLists []interface{}) (interface{}, error) {
+	numLists := len(listOfLists)
+	if numLists == 0 {
+		return listOfLists, nil
+	}
+	list, ok := listOfLists[0].([]interface{})
+	if !ok {
+		return nil, errors.New("Expected list of lists")
+	}
+	listLen := len(list)
+
+	res := make([]interface{}, listLen)
+	for i := range res {
+		res[i] = make([]interface{}, numLists)
+		for j, v := range listOfLists {
+			list, ok := v.([]interface{})
+			if !ok {
+				return nil, errors.New("Expected list of lists")
+			}
+			if len(list) != listLen {
+				return nil, errors.New("All lists must be the same length")
+			}
+			res[i].([]interface{})[j] = list[i]
+		}
+	}
+
+	return res, nil
+}, CheckArity(1))

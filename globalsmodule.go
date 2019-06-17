@@ -75,7 +75,9 @@ var GlobalsModule = &Module{
 		&Func{Name: "reverse", F: reverseFn},
 		&Func{Name: "vec-repeat", F: vecRepeatFn},
 		&Func{Name: "map", F: mapFn},
+		&Func{Name: "map-indexed", F: mapIndexedFn},
 		&Func{Name: "vec-map", F: vecMapFn},
+		&Func{Name: "vec-map-indexed", F: vecMapIndexedFn},
 		&Func{Name: "apply", F: applyFn},
 		&Func{Name: "vec-apply", F: vecApplyFn},
 		&Func{Name: "vec-rand", F: vecRandFn},
@@ -86,6 +88,7 @@ var GlobalsModule = &Module{
 		&Func{Name: "take", F: takeFn},
 		&Func{Name: "sort-asc", F: sortAscFn},
 		&Func{Name: "sort-desc", F: sortDescFn},
+		&Func{Name: "sortindex", F: sortIndexFn},
 		&Func{Name: "bind", F: bindFn},
 	},
 	LispFuncs: []*LispFunc{
@@ -1300,6 +1303,44 @@ var mapFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	return nil, errParameterType
 }, CheckArityAtLeast(2))
 
+var mapIndexedFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	fn := args[0]
+
+	lists := [][]interface{}{}
+	for _, arg := range args[1:] {
+		list, ok := ToList(arg)
+		if !ok {
+			return nil, errParameterType
+		}
+		lists = append(lists, list)
+	}
+
+	l := len(lists[0])
+
+	res := []interface{}{}
+	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+		for i := 0; i < l; i++ {
+			fnArgs := make([]interface{}, len(lists)+1)
+			fnArgs[0] = int64(i)
+			for j, list := range lists {
+				if len(list) != l {
+					return nil, errors.New("Lists must be of same length")
+				}
+				fnArgs[j+1] = list[i]
+			}
+			r, err := fn(fnArgs...)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, r)
+		}
+
+		return res, nil
+	}
+
+	return nil, errParameterType
+}, CheckArityAtLeast(2))
+
 func sortAscFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	if len(args) != 2 {
 		return nil, errors.New(`sort-asc takes two arguments`)
@@ -1328,6 +1369,35 @@ func sortAscFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 		})
 
 		return res, nil
+	}
+
+	return nil, errParameterType
+}
+
+func sortIndexFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) != 2 {
+		return nil, errors.New(`sortindex takes two arguments`)
+	}
+
+	fn, err := scope.Eval(args[0])
+	if err != nil {
+		return nil, scope.errorAt(args[0], err)
+	}
+	listRaw, err := scope.Eval(args[1])
+	if err != nil {
+		return nil, scope.errorAt(args[1], err)
+	}
+
+	list, ok := listRaw.([]interface{})
+	if !ok {
+		return nil, errParameterType
+	}
+
+	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+		return SortIndex(list, func(v1, v2 interface{}) bool {
+			v, _ := fn(v1, v2)
+			return v.(bool)
+		}), nil
 	}
 
 	return nil, errParameterType
@@ -1545,6 +1615,48 @@ var vecMapFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) 
 					return nil, errors.New("Lists must be of same length")
 				}
 				fnArgs[j] = list[i]
+			}
+			r, err := fn(fnArgs...)
+			if err != nil {
+				return nil, err
+			}
+			v, ok := r.(float64)
+			if !ok {
+				return nil, errors.New("Expected function to return float64")
+			}
+			res = append(res, v)
+		}
+
+		return res, nil
+	}
+
+	return nil, errParameterType
+}, CheckArityAtLeast(2))
+
+var vecMapIndexedFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	fn := args[0]
+
+	lists := [][]float64{}
+	for _, arg := range args[1:] {
+		list, ok := arg.([]float64)
+		if !ok {
+			return nil, errParameterType
+		}
+		lists = append(lists, list)
+	}
+
+	l := len(lists[0])
+
+	res := []float64{}
+	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+		for i := 0; i < l; i++ {
+			fnArgs := make([]interface{}, len(lists)+1)
+			fnArgs[0] = int64(i)
+			for j, list := range lists {
+				if len(list) != l {
+					return nil, errors.New("Lists must be of same length")
+				}
+				fnArgs[j+1] = list[i]
 			}
 			r, err := fn(fnArgs...)
 			if err != nil {

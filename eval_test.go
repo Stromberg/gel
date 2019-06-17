@@ -627,6 +627,16 @@ var evalList = []struct {
 		[]interface{}{3.0, 5.0, 12.0},
 	},
 
+	// sortindex
+	{
+		`(sortindex < (list 12.0 3.0 5.0))`,
+		[]interface{}{int64(1), int64(2), int64(0)},
+	},
+	{
+		`(var x (list 12.0 3.0 5.0)) (sortindex < x) x`,
+		[]interface{}{12.0, 3.0, 5.0},
+	},
+
 	// sort-desc
 	{
 		`(sort-desc < (list 12.0 3.0 5.0))`,
@@ -727,6 +737,36 @@ var evalList = []struct {
 		[]interface{}{1.0, 4.0, 9.0},
 	},
 
+	// map-indexed
+	{
+		`(map-indexed (dict))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(map-indexed (func (i x) (+ i x)) (list 12.0))`,
+		[]interface{}{12.0},
+	},
+	{
+		`(map-indexed (func (i x) (* 0 x)) (list 12))`,
+		[]interface{}{int64(0)},
+	},
+	{
+		`(map-indexed (func (i x) (+ 0 x)) (vec 12))`,
+		[]interface{}{12.0},
+	},
+	{
+		`(map-indexed (func (i x) (+ i x)) (list 12.0 3))`,
+		[]interface{}{12.0, int64(4)},
+	},
+	{
+		`(map-indexed (func (i x) (+ i x)) (list 1 2 3))`,
+		[]interface{}{int64(1), int64(3), int64(5)},
+	},
+	{
+		`(map-indexed (func (i x y) (+ i (* x y))) (list 1.0 2.0 3.0) (list 1 2 3))`,
+		[]interface{}{1.0, 5.0, 11.0},
+	},
+
 	// filter
 	{
 		`(filter (func (x) (+ 1.0 x)))`,
@@ -789,6 +829,32 @@ var evalList = []struct {
 	{
 		`(vec-map (func (x y) (* x y)) (vec 1.0 2.0 3.0) (vec 1 2 3))`,
 		[]float64{1.0, 4.0, 9.0},
+	},
+
+	// vec-map-indexed
+	{
+		`(vec-map-indexed (dict))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(vec-map-indexed (func (i x) (+ i x)) (vec 12.0))`,
+		[]float64{12.0},
+	},
+	{
+		`(vec-map-indexed (func (i x) (* i x)) (vec 12))`,
+		[]float64{0},
+	},
+	{
+		`(vec-map-indexed (func (i x) (+ i x)) (vec 12.0 3))`,
+		[]float64{12.0, 4},
+	},
+	{
+		`(vec-map-indexed (func (i x) (+ i x)) (vec 1 2 3))`,
+		[]float64{1.0, 3.0, 5.0},
+	},
+	{
+		`(vec-map-indexed (func (i x y) (+ i (* x y))) (vec 1.0 2.0 3.0) (vec 1 2 3))`,
+		[]float64{1.0, 5.0, 11.0},
 	},
 
 	// bind

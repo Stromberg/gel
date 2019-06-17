@@ -107,3 +107,39 @@ func TestStdLibModuleCombinations(t *testing.T) {
 		},
 	)
 }
+
+func TestStdLibModuleTranspose(t *testing.T) {
+	test := func(expr string, expected interface{}) {
+		g, err := gel.New(expr)
+		assert.NoError(t, err)
+		assert.NotNil(t, g)
+		s, err := g.Eval(gel.NewEnv())
+		assert.NoError(t, err)
+		assert.Equal(t, expected, s)
+	}
+
+	test(
+		"(transpose (list))",
+		[]interface{}{},
+	)
+	test(
+		"(transpose (list (list 1.0)))",
+		[]interface{}{
+			[]interface{}{1.0},
+		},
+	)
+	test(
+		"(transpose (list (list 1.0 2.0) (list 3.0 4.0)))",
+		[]interface{}{
+			[]interface{}{1.0, 3.0},
+			[]interface{}{2.0, 4.0},
+		},
+	)
+	test(
+		"(transpose (list (list 1.0 2.0) (list 3.0 4.0) (list 5.0 6.0)))",
+		[]interface{}{
+			[]interface{}{1.0, 3.0, 5.0},
+			[]interface{}{2.0, 4.0, 6.0},
+		},
+	)
+}
