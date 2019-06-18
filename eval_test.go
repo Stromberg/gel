@@ -866,6 +866,10 @@ var evalList = []struct {
 		`((bind + 1) 4)`,
 		int64(5),
 	},
+	{
+		`((bind sortindex <) (list 3 1 2))`,
+		[]interface{}{int64(1), int64(2), int64(0)},
+	},
 
 	// range
 	{

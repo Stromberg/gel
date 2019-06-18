@@ -1341,21 +1341,9 @@ var mapIndexedFn = ErrFunc(func(args ...interface{}) (value interface{}, err err
 	return nil, errParameterType
 }, CheckArityAtLeast(2))
 
-func sortAscFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
-	if len(args) != 2 {
-		return nil, errors.New(`sort-asc takes two arguments`)
-	}
-
-	fn, err := scope.Eval(args[0])
-	if err != nil {
-		return nil, scope.errorAt(args[0], err)
-	}
-	listRaw, err := scope.Eval(args[1])
-	if err != nil {
-		return nil, scope.errorAt(args[1], err)
-	}
-
-	list, ok := listRaw.([]interface{})
+var sortAscFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	fn := args[0]
+	list, ok := args[1].([]interface{})
 	if !ok {
 		return nil, errParameterType
 	}
@@ -1372,23 +1360,11 @@ func sortAscFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	}
 
 	return nil, errParameterType
-}
+}, CheckArity(2))
 
-func sortIndexFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
-	if len(args) != 2 {
-		return nil, errors.New(`sortindex takes two arguments`)
-	}
-
-	fn, err := scope.Eval(args[0])
-	if err != nil {
-		return nil, scope.errorAt(args[0], err)
-	}
-	listRaw, err := scope.Eval(args[1])
-	if err != nil {
-		return nil, scope.errorAt(args[1], err)
-	}
-
-	list, ok := listRaw.([]interface{})
+var sortIndexFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	fn := args[0]
+	list, ok := args[1].([]interface{})
 	if !ok {
 		return nil, errParameterType
 	}
@@ -1401,23 +1377,11 @@ func sortIndexFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	}
 
 	return nil, errParameterType
-}
+}, CheckArity(2))
 
-func sortDescFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
-	if len(args) != 2 {
-		return nil, errors.New(`sort-desc takes two arguments`)
-	}
-
-	fn, err := scope.Eval(args[0])
-	if err != nil {
-		return nil, scope.errorAt(args[0], err)
-	}
-	listRaw, err := scope.Eval(args[1])
-	if err != nil {
-		return nil, scope.errorAt(args[1], err)
-	}
-
-	list, ok := listRaw.([]interface{})
+var sortDescFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	fn := args[0]
+	list, ok := args[1].([]interface{})
 	if !ok {
 		return nil, errParameterType
 	}
@@ -1434,7 +1398,7 @@ func sortDescFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	}
 
 	return nil, errParameterType
-}
+}, CheckArity(2))
 
 func reduceFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	if len(args) != 3 {
