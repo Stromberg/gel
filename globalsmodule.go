@@ -1056,8 +1056,8 @@ var takeFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	switch args[1].(type) {
 	case []interface{}:
 		s := args[1].([]interface{})
-		if len(s) <= n {
-			n = len(s) - 1
+		if len(s) < n {
+			n = len(s)
 		}
 
 		if n <= 0 {
@@ -1067,8 +1067,8 @@ var takeFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 		return s[0:n], nil
 	case []float64:
 		s := args[1].([]float64)
-		if len(s) <= n {
-			n = len(s) - 1
+		if len(s) < n {
+			n = len(s)
 		}
 
 		if n <= 0 {

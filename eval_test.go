@@ -1436,7 +1436,6 @@ var evalList = []struct {
 		`(take 1 (list 1 2))`,
 		[]interface{}{int64(1)},
 	},
-
 	{
 		`(take 3 (vec 1 2 3 4 5 6))`,
 		[]float64{1, 2, 3},
@@ -1444,6 +1443,14 @@ var evalList = []struct {
 	{
 		`(take 2 (list 1 2 3 4 5 6))`,
 		[]interface{}{int64(1), int64(2)},
+	},
+	{
+		`(take 6 (vec 1 2 3 4 5 6))`,
+		[]float64{1, 2, 3, 4, 5, 6},
+	},
+	{
+		`(take 6 (list 1 2 3 4 5 6))`,
+		[]interface{}{int64(1), int64(2), int64(3), int64(4), int64(5), int64(6)},
 	},
 
 	// empty?
