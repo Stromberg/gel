@@ -40,6 +40,7 @@ var StdLibModule = &Module{
 		&LispFunc{Name: "pow", F: "(func (n) (func (x) (math.Pow x n)))"},
 		&LispFunc{Name: "with-default", F: "(func (d) (func (x) (if (or (nan? x) (pos-inf? x)) d x)))"},
 		&LispFunc{Name: "positive", F: "(func (d) (func (x) (if (or (nan? x) (pos-inf? x) (< x 0)) d x)))"},
+		&LispFunc{Name: "str", F: "(func (n) (sprintf \"%v\" n))"},
 	},
 }
 

@@ -25,6 +25,7 @@ func TestStdLibModuleStrings(t *testing.T) {
 	test("(printf \"Grr: %v\\n\" 3.14)", 10)
 	test("(sprintf \"Grr\\n\")", "Grr\n")
 	test("(sprintf \"Grr: %v\\n\" 3.14)", "Grr: 3.14\n")
+	test("(str 3.14)", "3.14")
 }
 
 func TestStdLibModuleMath(t *testing.T) {
