@@ -16,10 +16,16 @@ type LispFunc struct {
 	F           string
 }
 
+type Script struct {
+	Name   string
+	Source string
+}
+
 // Module is a description of a module containing functions
 type Module struct {
 	Name        string
 	Description string
 	Funcs       []*Func
 	LispFuncs   []*LispFunc
+	Scripts     []*Script
 }

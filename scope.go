@@ -56,6 +56,18 @@ func NewScope(fset *ast.FileSet) (*Scope, error) {
 				return nil, err
 			}
 		}
+
+		for _, s := range m.Scripts {
+			node, err := ParseString(fset, fmt.Sprintf("%v:%v", m.Name, s.Name), s.Source)
+			if err != nil {
+				return nil, err
+			}
+
+			_, err = scope.Eval(node)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	return scope, nil

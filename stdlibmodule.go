@@ -36,11 +36,20 @@ var StdLibModule = &Module{
 		&Func{Name: "transpose", F: transposeFn},
 	},
 	LispFuncs: []*LispFunc{
-		&LispFunc{Name: "cap", F: "(func (lower upper) (func (x) (max lower (min upper x))))"},
+		// &LispFunc{Name: "cap", F: "(func (lower upper) (func (x) (max lower (min upper x))))"},
 		&LispFunc{Name: "pow", F: "(func (n) (func (x) (math.Pow x n)))"},
 		&LispFunc{Name: "with-default", F: "(func (d) (func (x) (if (or (nan? x) (pos-inf? x)) d x)))"},
 		&LispFunc{Name: "positive", F: "(func (d) (func (x) (if (or (nan? x) (pos-inf? x) (< x 0)) d x)))"},
 		&LispFunc{Name: "str", F: "(func (n) (sprintf \"%v\" n))"},
+	},
+	Scripts: []*Script{ // Mainly for test
+		&Script{Name: "", Source: `
+			(func cap 
+				(lower upper) 
+					(func (x) 
+						(max lower 
+							(min upper x))))`,
+		},
 	},
 }
 
