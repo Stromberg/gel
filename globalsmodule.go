@@ -1,6 +1,7 @@
 package gel
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -69,6 +70,7 @@ var GlobalsModule = &Module{
 		&Func{Name: "len", F: lenFn},
 		&Func{Name: "append", F: appendFn},
 		&Func{Name: "concat", F: concatFn},
+		&Func{Name: "merge", F: mergeFn},
 		&Func{Name: "range", F: rangeFn},
 		&Func{Name: "vec-range", F: vecRangeFn},
 		&Func{Name: "repeat", F: repeatFn},
@@ -90,6 +92,7 @@ var GlobalsModule = &Module{
 		&Func{Name: "sort-desc", F: sortDescFn},
 		&Func{Name: "sortindex", F: sortIndexFn},
 		&Func{Name: "bind", F: bindFn},
+		&Func{Name: "json", F: jsonFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "identity", F: "(func (x) x)"},
@@ -597,6 +600,27 @@ var containsFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 	return nil, errParameterType
 }, CheckArity(2))
 
+var jsonFn = ErrFunc(func(arg interface{}) (interface{}, error) {
+	switch rarg := arg.(type) {
+	case map[interface{}]interface{}:
+		d := map[string]interface{}{}
+		for k, v := range rarg {
+			s, ok := k.(string)
+			if !ok {
+				return nil, errors.New("JSON only supports strings as keys")
+			}
+			d[s] = v
+		}
+		arg = d
+	}
+
+	b, err := json.Marshal(arg)
+	if err != nil {
+		return nil, err
+	}
+	return string(b), nil
+}, CheckArity(1))
+
 var updateFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 	switch arg := args[0].(type) {
 	case map[interface{}]interface{}:
@@ -696,6 +720,21 @@ var concatFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 		return v, nil
 	}
 	return nil, errParameterType
+}, CheckArityAtLeast(2))
+
+var mergeFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
+	res := map[interface{}]interface{}{}
+	for _, arg := range args {
+		d, ok := arg.(map[interface{}]interface{})
+		if !ok {
+			return nil, errParameterType
+		}
+		for k, v := range d {
+			res[k] = v
+		}
+	}
+	return res, nil
+
 }, CheckArityAtLeast(2))
 
 var lenFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
@@ -1401,8 +1440,8 @@ var sortDescFn = ErrFunc(func(args ...interface{}) (value interface{}, err error
 }, CheckArity(2))
 
 func reduceFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
-	if len(args) != 3 {
-		return nil, errors.New(`reduce takes three arguments`)
+	if len(args) != 2 && len(args) != 3 {
+		return nil, errors.New(`reduce takes 2 or three arguments arguments`)
 	}
 
 	fn, err := scope.Eval(args[0])
@@ -1419,17 +1458,25 @@ func reduceFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 		return nil, errParameterType
 	}
 
-	init, err := scope.Eval(args[2])
-	if err != nil {
-		return nil, scope.errorAt(args[2], err)
+	var init interface{}
+
+	if len(args) == 3 {
+		init, err = scope.Eval(args[2])
+		if err != nil {
+			return nil, scope.errorAt(args[2], err)
+		}
 	}
 
 	r := init
 	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
-		for _, v := range list {
-			r, err = fn(r, v)
-			if err != nil {
-				return nil, err
+		for i, v := range list {
+			if i == 0 && r == nil {
+				r = v
+			} else {
+				r, err = fn(r, v)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 

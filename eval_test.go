@@ -615,6 +615,66 @@ var evalList = []struct {
 		[]interface{}{"d", int64(1), "a"},
 	},
 
+	// merge
+	{
+		`(merge (dict))`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(merge (dict) (dict))`,
+		map[interface{}]interface{}{},
+	},
+	{
+		`(merge (dict "a" 3.0) (dict))`,
+		map[interface{}]interface{}{"a": 3.0},
+	},
+	{
+		`(merge (dict "a" 3.0) (dict "a" 4.0))`,
+		map[interface{}]interface{}{"a": 4.0},
+	},
+	{
+		`(merge (dict "a" 3.0 "b" 5.0) (dict "a" 4.0))`,
+		map[interface{}]interface{}{"a": 4.0, "b": 5.0},
+	},
+
+	// json
+	{
+		`(json 1)`,
+		"1",
+	},
+	{
+		`(json 1.0)`,
+		"1",
+	},
+	{
+		`(json "aBc")`,
+		"\"aBc\"",
+	},
+	{
+		`(json (list))`,
+		"[]",
+	},
+	{
+		`(json (vec))`,
+		"[]",
+	},
+	{
+		`(json (list 12.3))`,
+		"[12.3]",
+	},
+	{
+		`(json (vec 12.3))`,
+		"[12.3]",
+	},
+	{
+		`(json (dict))`,
+		"{}",
+	},
+	{
+		`(json (dict "a" 3.0))`,
+		"{\"a\":3}",
+	},
+
 	// flatten
 	{
 		`(flatten (list 12.0))`,
@@ -680,18 +740,14 @@ var evalList = []struct {
 	// reduce
 	{
 		`(reduce)`,
-		errorf(`twik source:1:2: reduce takes three arguments`),
+		errorf(`twik source:1:2: reduce takes 2 or three arguments arguments`),
 	},
 	{
 		`(reduce 1)`,
-		errorf(`twik source:1:2: reduce takes three arguments`),
+		errorf(`twik source:1:2: reduce takes 2 or three arguments arguments`),
 	},
 	{
 		`(reduce 1 2)`,
-		errorf(`twik source:1:2: reduce takes three arguments`),
-	},
-	{
-		`(reduce 1 2 3)`,
 		errorf(`twik source:1:2: Error in parameter type`),
 	},
 	{
@@ -700,6 +756,14 @@ var evalList = []struct {
 	},
 	{
 		`(reduce (func (a b) (+ a b)) (list 1 2 3 4) 0)`,
+		int64(10),
+	},
+	{
+		`(reduce (func (a b) (+ a b)) (list 2))`,
+		int64(2),
+	},
+	{
+		`(reduce (func (a b) (+ a b)) (list 1 2 3 4))`,
 		int64(10),
 	},
 
