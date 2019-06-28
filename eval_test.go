@@ -957,6 +957,16 @@ var evalList = []struct {
 	// 	"",
 	// },
 
+	// rand
+	{
+		`(rand 1)`,
+		errorf(`twik source:1:2: rand function takes no arguments`),
+	},
+	// {
+	// 	`(rand)`,
+	// 	"",
+	// },
+
 	// range
 	{
 		`(range)`,
@@ -1067,6 +1077,24 @@ var evalList = []struct {
 	{
 		`(repeat 2 6.0)`,
 		[]interface{}{6.0, 6.0},
+	},
+
+	// repeatedly
+	{
+		`(repeatedly)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(repeatedly 1)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	{
+		`(repeatedly 1 (func () 3.14))`,
+		[]interface{}{3.14},
+	},
+	{
+		`(repeatedly 3 (func () 3.14))`,
+		[]interface{}{3.14, 3.14, 3.14},
 	},
 
 	// vec-repeat

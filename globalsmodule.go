@@ -95,6 +95,8 @@ var GlobalsModule = &Module{
 		&Func{Name: "bind", F: bindFn},
 		&Func{Name: "json", F: jsonFn},
 		&Func{Name: "uuid", F: uuidFn},
+		&Func{Name: "rand", F: randFn},
+		&Func{Name: "repeatedly", F: repeatedlyFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "identity", F: "(func (x) x)"},
@@ -151,6 +153,16 @@ func uuidFn(args ...interface{}) (value interface{}, err error) {
 
 	res := uuid.New().String()
 	return res, nil
+}
+
+func randFn(args ...interface{}) (value interface{}, err error) {
+	if len(args) != 0 {
+		return nil, errors.New("rand function takes no arguments")
+	}
+
+	rand.Seed(time.Now().UnixNano())
+
+	return rand.Float64(), nil
 }
 
 var evalFileFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
@@ -365,6 +377,28 @@ var repeatFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) 
 
 	res := make([]interface{}, n)
 	for i := range res {
+		res[i] = v
+	}
+	return res, nil
+}, CheckArity(2))
+
+var repeatedlyFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	n, ok := args[0].(int64)
+	if !ok {
+		return nil, errParameterType
+	}
+
+	fn, ok := args[1].(func(args ...interface{}) (interface{}, error))
+	if !ok {
+		return nil, errors.New("repeatedly takes a function as second parameter")
+	}
+
+	res := make([]interface{}, n)
+	for i := range res {
+		v, err := fn()
+		if err != nil {
+			return nil, err
+		}
 		res[i] = v
 	}
 	return res, nil
