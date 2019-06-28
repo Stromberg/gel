@@ -935,6 +935,16 @@ var evalList = []struct {
 		[]interface{}{int64(1), int64(2), int64(0)},
 	},
 
+	// uuid
+	{
+		`(uuid 1)`,
+		errorf(`twik source:1:2: uuid function takes no arguments`),
+	},
+	// {
+	// 	`(uuid)`,
+	// 	"",
+	// },
+
 	// range
 	{
 		`(range)`,

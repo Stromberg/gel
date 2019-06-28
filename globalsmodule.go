@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/Stromberg/gel/ast"
+	"github.com/google/uuid"
 )
 
 func init() {
@@ -93,6 +94,7 @@ var GlobalsModule = &Module{
 		&Func{Name: "sortindex", F: sortIndexFn},
 		&Func{Name: "bind", F: bindFn},
 		&Func{Name: "json", F: jsonFn},
+		&Func{Name: "uuid", F: uuidFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "identity", F: "(func (x) x)"},
@@ -140,6 +142,15 @@ var slurpFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 	}
 	return string(data), nil
 }, CheckArity(1))
+
+func uuidFn(args ...interface{}) (value interface{}, err error) {
+	if len(args) != 0 {
+		return nil, errors.New("uuid function takes no arguments")
+	}
+
+	res := uuid.New().String()
+	return res, nil
+}
 
 var evalFileFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 	file, ok := args[0].(string)
