@@ -100,6 +100,7 @@ var GlobalsModule = &Module{
 		&LispFunc{Name: "identity", F: "(func (x) x)"},
 		&LispFunc{Name: "empty?", F: "(func (x) (== (len x) 0))"},
 		&LispFunc{Name: "first", F: "(func (s) (get s 0))"},
+		&LispFunc{Name: "second", F: "(func (s) (get s 1))"},
 		&LispFunc{Name: "rest", F: "(func (s) (skip 1 s))"},
 		&LispFunc{Name: "last", F: "(func (s) (if (empty? s) nil (get s (- (len s) 1))))"},
 		&LispFunc{Name: "inc", F: "(func (s) (+ s 1))"},
