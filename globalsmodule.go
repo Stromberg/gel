@@ -631,6 +631,7 @@ var jsonFn = ErrFunc(func(arg interface{}) (interface{}, error) {
 			for i, v := range rarg {
 				d[i] = fix(v)
 			}
+			return d
 		}
 		return arg
 	}
