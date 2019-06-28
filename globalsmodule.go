@@ -467,7 +467,7 @@ var getFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 	case map[interface{}]interface{}:
 		v, ok := arg[args[1]]
 		if !ok {
-			return nil, errors.New("Key not found")
+			return false, nil
 		}
 		return v, nil
 	case []interface{}:

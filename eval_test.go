@@ -376,7 +376,7 @@ var evalList = []struct {
 	},
 	{
 		`(get (dict "d" 12.0) "a")`,
-		errorf(`twik source:1:2: Key not found`),
+		false,
 	},
 	{
 		`(get (vec 12.0) 1)`,

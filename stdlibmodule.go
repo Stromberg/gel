@@ -30,6 +30,8 @@ var StdLibModule = &Module{
 		}, CheckArityAtLeast(1))},
 		&Func{Name: "math.Pow", F: SimpleFunc(math.Pow, CheckArity(2), ParamToFloat64(0), ParamToFloat64(1))},
 		&Func{Name: "math.Sqrt", F: SimpleFunc(math.Sqrt, CheckArity(1), ParamToFloat64(0))},
+		&Func{Name: "math.Ceil", F: SimpleFunc(math.Ceil, CheckArity(1), ParamToFloat64(0))},
+		&Func{Name: "math.Log", F: SimpleFunc(math.Log, CheckArity(1), ParamToFloat64(0))},
 		&Func{Name: "nan?", F: SimpleFunc(math.IsNaN, CheckArity(1), ParamToFloat64(0))},
 		&Func{Name: "pos-inf?", F: SimpleFunc(func(v float64) bool { return math.IsInf(v, 0) }, CheckArity(1), ParamToFloat64(0))},
 		&Func{Name: "combinations", F: combinationsFn},
