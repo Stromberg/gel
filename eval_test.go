@@ -674,6 +674,10 @@ var evalList = []struct {
 		`(json (dict "a" 3.0))`,
 		"{\"a\":3}",
 	},
+	{
+		`(json (dict "a" (dict "b" 3.0)))`,
+		"{\"a\":{\"b\":3}}",
+	},
 
 	// flatten
 	{

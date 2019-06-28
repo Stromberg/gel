@@ -612,20 +612,25 @@ var containsFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 }, CheckArity(2))
 
 var jsonFn = ErrFunc(func(arg interface{}) (interface{}, error) {
-	switch rarg := arg.(type) {
-	case map[interface{}]interface{}:
-		d := map[string]interface{}{}
-		for k, v := range rarg {
-			s, ok := k.(string)
-			if !ok {
-				return nil, errors.New("JSON only supports strings as keys")
+	var fix func(interface{}) interface{}
+
+	fix = func(arg interface{}) interface{} {
+		switch rarg := arg.(type) {
+		case map[interface{}]interface{}:
+			d := map[string]interface{}{}
+			for k, v := range rarg {
+				s, ok := k.(string)
+				if !ok {
+					s = fmt.Sprintf("%v", k)
+				}
+				d[s] = fix(v)
 			}
-			d[s] = v
+			return d
 		}
-		arg = d
+		return arg
 	}
 
-	b, err := json.Marshal(arg)
+	b, err := json.Marshal(fix(arg))
 	if err != nil {
 		return nil, err
 	}
