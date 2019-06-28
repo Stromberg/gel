@@ -881,6 +881,44 @@ var evalList = []struct {
 		[]float64{12.0, 14.0},
 	},
 
+	// count-if
+	{
+		`(count-if (func (x) (+ 1.0 x)))`,
+		errorf(`twik source:1:2: count-if takes two arguments`),
+	},
+	{
+		`(count-if (func (x) (+ 1.0 x)) (list 1 2))`,
+		errorf(`twik source:1:2: callback must return bool`),
+	},
+	{
+		`(count-if (func (x) (> x 12.0)) (list 12.0))`,
+		0,
+	},
+	{
+		`(count-if (func (x) (> x 11.0)) (list 12.0))`,
+		1,
+	},
+	{
+		`(count-if (func (x) (> x 11.0)) (list 12.0 10.0 14.0))`,
+		2,
+	},
+	{
+		`(count-if (func (x) (+ 1.0 x)) (vec 1 2))`,
+		errorf(`twik source:1:2: callback must return bool`),
+	},
+	{
+		`(count-if (func (x) (> x 12.0)) (vec 12.0))`,
+		0,
+	},
+	{
+		`(count-if (func (x) (> x 11.0)) (vec 12.0))`,
+		1,
+	},
+	{
+		`(count-if (func (x) (> x 11.0)) (vec 12.0 10.0 14.0))`,
+		2,
+	},
+
 	// vec-map
 	{
 		`(vec-map (dict))`,

@@ -86,6 +86,7 @@ var GlobalsModule = &Module{
 		&Func{Name: "vec-rand", F: vecRandFn},
 		&Func{Name: "reduce", F: reduceFn},
 		&Func{Name: "filter", F: filterFn},
+		&Func{Name: "count-if", F: countIfFn},
 		&Func{Name: "flatten", F: flattenFn},
 		&Func{Name: "skip", F: skipFn},
 		&Func{Name: "take", F: takeFn},
@@ -1543,24 +1544,15 @@ func reduceFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	return nil, errParameterType
 }
 
-func filterFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+func filterFn(args ...interface{}) (value interface{}, err error) {
 	if len(args) != 2 {
 		return nil, errors.New(`filter takes two arguments`)
 	}
 
-	fn, err := scope.Eval(args[0])
-	if err != nil {
-		return nil, scope.errorAt(args[0], err)
-	}
-	listRaw, err := scope.Eval(args[1])
-	if err != nil {
-		return nil, scope.errorAt(args[1], err)
-	}
+	fn := args[0]
 
-	switch listRaw.(type) {
+	switch list := args[1].(type) {
 	case []interface{}:
-		list := listRaw.([]interface{})
-
 		res := []interface{}{}
 		if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
 			for _, v := range list {
@@ -1581,8 +1573,6 @@ func filterFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 			return res, nil
 		}
 	case []float64:
-		list := listRaw.([]float64)
-
 		res := []float64{}
 		if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
 			for _, v := range list {
@@ -1601,6 +1591,59 @@ func filterFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 			}
 
 			return res, nil
+		}
+	}
+
+	return nil, errParameterType
+}
+
+func countIfFn(args ...interface{}) (value interface{}, err error) {
+	if len(args) != 2 {
+		return nil, errors.New(`count-if takes two arguments`)
+	}
+
+	fn := args[0]
+
+	switch list := args[1].(type) {
+	case []interface{}:
+		res := 0
+		if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+			for _, v := range list {
+				r, err := fn(v)
+				if err != nil {
+					return nil, err
+				}
+				b, ok := r.(bool)
+				if !ok {
+					return nil, errors.New("callback must return bool")
+				}
+
+				if b {
+					res++
+				}
+			}
+
+			return int64(res), nil
+		}
+	case []float64:
+		res := 0
+		if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+			for _, v := range list {
+				r, err := fn(v)
+				if err != nil {
+					return nil, err
+				}
+				b, ok := r.(bool)
+				if !ok {
+					return nil, errors.New("callback must return bool")
+				}
+
+				if b {
+					res++
+				}
+			}
+
+			return int64(res), nil
 		}
 	}
 
