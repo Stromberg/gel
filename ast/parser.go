@@ -266,6 +266,23 @@ func (p *parser) next() (Node, error) {
 		return &String{Input: input, InputPos: p.pos(start), Value: value}, nil
 	}
 
+	if r == ':' {
+		for {
+			if p.i == len(p.code) {
+				break
+			}
+			r, size = utf8.DecodeRuneInString(p.code[p.i:])
+			p.i += size
+			if r == ')' || unicode.IsSpace(r) {
+				p.i -= size
+				break
+			}
+		}
+		input := p.code[start:p.i]
+		value := input[1:]
+		return &String{Input: input, InputPos: p.pos(start), Value: value}, nil
+	}
+
 	// symbol
 	for p.i < len(p.code) {
 		r, size = utf8.DecodeRuneInString(p.code[p.i:])

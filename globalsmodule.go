@@ -59,8 +59,10 @@ var GlobalsModule = &Module{
 		&Func{Name: "vec2list", F: vecToListFn},
 		&Func{Name: "list2vec", F: listToVecFn},
 		&Func{Name: "list", F: listFn},
+		&Func{Name: "[]", F: listFn},
 		&Func{Name: "vec?", F: isVecFn},
 		&Func{Name: "list?", F: isListFn},
+		&Func{Name: "{}", F: dictFn},
 		&Func{Name: "dict", F: dictFn},
 		&Func{Name: "dict?", F: isDictFn},
 		&Func{Name: "dict-keys", F: dictKeysFn},
@@ -84,6 +86,7 @@ var GlobalsModule = &Module{
 		&Func{Name: "apply", F: applyFn},
 		&Func{Name: "vec-apply", F: vecApplyFn},
 		&Func{Name: "vec-rand", F: vecRandFn},
+		&Func{Name: "list-rand", F: listRandFn},
 		&Func{Name: "reduce", F: reduceFn},
 		&Func{Name: "filter", F: filterFn},
 		&Func{Name: "count-if", F: countIfFn},
@@ -96,8 +99,9 @@ var GlobalsModule = &Module{
 		&Func{Name: "bind", F: bindFn},
 		&Func{Name: "json", F: jsonFn},
 		&Func{Name: "uuid", F: uuidFn},
-		&Func{Name: "rand", F: randFn},
+		&Func{Name: "rand", F: randFn()},
 		&Func{Name: "repeatedly", F: repeatedlyFn},
+		&Func{Name: "time", F: timeFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "identity", F: "(func (x) x)"},
@@ -156,14 +160,16 @@ func uuidFn(args ...interface{}) (value interface{}, err error) {
 	return res, nil
 }
 
-func randFn(args ...interface{}) (value interface{}, err error) {
-	if len(args) != 0 {
-		return nil, errors.New("rand function takes no arguments")
+func randFn() func(args ...interface{}) (value interface{}, err error) {
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+
+	return func(args ...interface{}) (value interface{}, err error) {
+		if len(args) != 0 {
+			return nil, errors.New("rand function takes no arguments")
+		}
+
+		return r.Float64(), nil
 	}
-
-	rand.Seed(time.Now().UnixNano())
-
-	return rand.Float64(), nil
 }
 
 var evalFileFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
@@ -439,6 +445,21 @@ var vecRandFn = ErrFunc(func(args ...interface{}) (value interface{}, err error)
 	res := make([]float64, n)
 	for i := range res {
 		res[i] = rand.Float64()
+	}
+	return res, nil
+}, CheckArity(1))
+
+var listRandFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
+	n, ok := args[0].(int64)
+	if !ok {
+		return nil, errParameterType
+	}
+
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+
+	res := make([]interface{}, n)
+	for i := range res {
+		res[i] = r.Float64()
 	}
 	return res, nil
 }, CheckArity(1))
@@ -1205,6 +1226,18 @@ func orFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 			return value, nil
 		}
 	}
+	return value, err
+}
+
+func timeFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) != 1 {
+		return nil, errors.New("time takes 1 argument")
+	}
+
+	start := time.Now()
+	value, err = scope.Eval(args[0])
+	elapsed := time.Since(start)
+	fmt.Printf("Elapsed %.2f milliseconds\n", float64(elapsed.Nanoseconds())/1e6)
 	return value, err
 }
 

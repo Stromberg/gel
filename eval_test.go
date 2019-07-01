@@ -182,6 +182,16 @@ var evalList = []struct {
 		errorf("testerror.gel:1:8: undefined symbol: x"),
 	},
 
+	// time
+	{
+		`(time)`,
+		errorf("twik source:1:2: time takes 1 argument"),
+	},
+	{
+		`(time (range 1 5 1))`,
+		[]interface{}{int64(1), int64(2), int64(3), int64(4)},
+	},
+
 	// error
 	{
 		"(\nerror \"error message\")",
@@ -263,6 +273,32 @@ var evalList = []struct {
 		[]interface{}{[]float64{12.0, 3.14}},
 	},
 
+	// []
+	{
+		`([])`,
+		[]interface{}{},
+	},
+	{
+		`([] 12.0)`,
+		[]interface{}{12.0},
+	},
+	{
+		`([] 12)`,
+		[]interface{}{int64(12)},
+	},
+	{
+		`([] 12 3.14)`,
+		[]interface{}{int64(12), 3.14},
+	},
+	{
+		`([] 12.0 "do")`,
+		[]interface{}{12.0, "do"},
+	},
+	{
+		`([] (vec 12 3.14))`,
+		[]interface{}{[]float64{12.0, 3.14}},
+	},
+
 	// vec2list
 
 	{
@@ -309,7 +345,43 @@ var evalList = []struct {
 		map[interface{}]interface{}{"d": 12.0},
 	},
 	{
+		`(dict :d 12.0)`,
+		map[interface{}]interface{}{"d": 12.0},
+	},
+	{
 		`(dict "d")`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+
+	// :
+	{
+		`(:d (dict :d 12.0))`,
+		12.0,
+	},
+	{
+		`(:d (dict "d" 12.0))`,
+		12.0,
+	},
+	{
+		`(:d)`,
+		errorf(`twik source:1:2: lookup using string requires a dictionary`),
+	},
+	{
+		`(:d (dict :a 12.0))`,
+		false,
+	},
+
+	// {}
+	{
+		`({})`,
+		map[interface{}]interface{}{},
+	},
+	{
+		`({} "d" 12.0)`,
+		map[interface{}]interface{}{"d": 12.0},
+	},
+	{
+		`({} "d")`,
 		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 
@@ -1178,6 +1250,16 @@ var evalList = []struct {
 	},
 	// {
 	// 	`(vec-rand 50)`,
+	// 	[]float64{0.5},
+	// },
+
+	// list-rand
+	{
+		`(list-rand)`,
+		errorf(`twik source:1:2: Wrong number of parameters`),
+	},
+	// {
+	// 	`(list-rand 50)`,
 	// 	[]float64{0.5},
 	// },
 

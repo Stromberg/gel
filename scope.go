@@ -7,6 +7,7 @@
 package gel
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Stromberg/gel/ast"
@@ -181,6 +182,18 @@ func (s *Scope) Eval(node ast.Node) (value interface{}, err error) {
 }
 
 func (s *Scope) call(fn interface{}, args []ast.Node) (value interface{}, err error) {
+	// Hack for : lookup
+	if key, ok := fn.(string); ok {
+		if len(args) != 1 {
+			return nil, errors.New("lookup using string requires a dictionary")
+		}
+		value, err := s.Eval(args[0])
+		if err != nil {
+			return nil, err
+		}
+		return getFn.(func(...interface{}) (interface{}, error))(value, key)
+	}
+
 	if fn, ok := fn.(func(*Scope, []ast.Node) (interface{}, error)); ok {
 		return fn(s, args)
 	}

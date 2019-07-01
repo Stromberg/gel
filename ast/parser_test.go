@@ -46,72 +46,123 @@ var parserTests = []struct {
 		[]ast.Node{
 			&ast.Int{Input: "1", InputPos: 1, Value: 1},
 		},
-	}, {
+	},
+	{
 		`-1`,
 		[]ast.Node{
 			&ast.Int{Input: "-1", InputPos: 1, Value: -1},
 		},
-	}, {
+	},
+	{
 		` 1 `,
 		[]ast.Node{
 			&ast.Int{Input: "1", InputPos: 2, Value: 1},
 		},
-	}, {
+	},
+	{
 		`0x10`,
 		[]ast.Node{
 			&ast.Int{Input: "0x10", InputPos: 1, Value: 16},
 		},
-	}, {
+	},
+	{
 		`0n10`,
 		errorf(".*: invalid int literal: 0n10"),
-	}, {
+	},
+	{
 		`'a'`,
 		[]ast.Node{
 			&ast.Int{Input: "'a'", InputPos: 1, Value: 'a'},
 		},
-	}, {
+	},
+	{
 		`'\''`,
 		[]ast.Node{
 			&ast.Int{Input: `'\''`, InputPos: 1, Value: '\''},
 		},
-	}, {
+	},
+	{
 		`'`,
 		errorf(".*: invalid single quote"),
-	}, {
+	},
+	{
 		`''`,
 		errorf(".*: invalid single quote"),
-	}, {
+	},
+	{
 		` 1.0 `,
 		[]ast.Node{
 			&ast.Float{Input: "1.0", InputPos: 2, Value: 1},
 		},
-	}, {
+	},
+	{
 		`()`,
 		[]ast.Node{
 			&ast.List{LParens: 1, RParens: 2},
 		},
-	}, {
+	},
+	{
 		` ( ) `,
 		[]ast.Node{
 			&ast.List{LParens: 2, RParens: 4},
 		},
-	}, {
+	},
+	{
+		`"foo"`,
+		[]ast.Node{
+			&ast.String{Input: `"foo"`, InputPos: 1, Value: "foo"},
+		},
+	},
+	{
 		`"foo\"bar"`,
 		[]ast.Node{
 			&ast.String{Input: `"foo\"bar"`, InputPos: 1, Value: "foo\"bar"},
 		},
-	}, {
+	},
+	{
 		` "foo" `,
 		[]ast.Node{
 			&ast.String{Input: `"foo"`, InputPos: 2, Value: "foo"},
 		},
-	}, {
+	},
+	{
+		`:foo`,
+		[]ast.Node{
+			&ast.String{Input: `:foo`, InputPos: 1, Value: "foo"},
+		},
+	},
+	{
+		`:foo-qw`,
+		[]ast.Node{
+			&ast.String{Input: `:foo-qw`, InputPos: 1, Value: "foo-qw"},
+		},
+	},
+	{
+		` :foo-qw `,
+		[]ast.Node{
+			&ast.String{Input: `:foo-qw`, InputPos: 2, Value: "foo-qw"},
+		},
+	},
+	{
+		`(:foo-qw)`,
+		[]ast.Node{
+			&ast.List{
+				LParens: 1,
+				Nodes: []ast.Node{
+					&ast.String{Input: `:foo-qw`, InputPos: 2, Value: "foo-qw"},
+				},
+				RParens: 9,
+			},
+		},
+	},
+	{
 		` "foo `,
 		errorf(`.*: unclosed string literal: "foo `),
 	}, {
 		`"\m"`,
 		errorf(`.*: invalid string literal: "\\m"`),
-	}, {
+	},
+	{
 		`(+ 1 (- 2 3) 4)`,
 		[]ast.Node{
 			&ast.List{
@@ -134,22 +185,25 @@ var parserTests = []struct {
 			},
 		},
 	},
-
 	{
 		"(a\nb\nc",
 		errorf(`twik source:3:2: missing \)`),
-	}, {
+	},
+	{
 		"(a\nb\n 1n \n)",
 		errorf(`twik source:3:2: invalid int literal: 1n`),
-	}, {
+	},
+	{
 		"1n",
 		errorf(`twik source:1:1: invalid int literal: 1n`),
-	}, {
+	},
+	{
 		"; Comment\n1",
 		[]ast.Node{
 			&ast.Int{Input: "1", InputPos: 11, Value: 1},
 		},
-	}, {
+	},
+	{
 		"(; Comment\n1)",
 		[]ast.Node{
 			&ast.List{
