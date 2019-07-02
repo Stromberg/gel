@@ -209,8 +209,9 @@ func (s *Scope) Eval(node ast.Node) (value interface{}, err error) {
 }
 
 func (s *Scope) call(fn interface{}, args []ast.Node) (value interface{}, err error) {
-	// Hack for : lookup
-	if key, ok := fn.(string); ok {
+	switch fn := fn.(type) {
+	// Lookup in dict based on string
+	case string:
 		if len(args) != 1 {
 			return nil, errors.New("lookup using string requires a dictionary")
 		}
@@ -218,13 +219,22 @@ func (s *Scope) call(fn interface{}, args []ast.Node) (value interface{}, err er
 		if err != nil {
 			return nil, err
 		}
-		return getFn.(func(...interface{}) (interface{}, error))(value, key)
-	}
-
-	if fn, ok := fn.(func(*Scope, []ast.Node) (interface{}, error)); ok {
+		return getFn.(func(...interface{}) (interface{}, error))(value, fn)
+	// Lookup on container
+	case map[interface{}]interface{}, []interface{}, []float64:
+		if len(args) != 1 {
+			return nil, errors.New("lookup requires a key")
+		}
+		value, err := s.Eval(args[0])
+		if err != nil {
+			return nil, err
+		}
+		return getFn.(func(...interface{}) (interface{}, error))(fn, value)
+	// Advanced function
+	case func(*Scope, []ast.Node) (interface{}, error):
 		return fn(s, args)
-	}
-	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
+	// Normal function
+	case func(...interface{}) (interface{}, error):
 		vargs := make([]interface{}, len(args))
 		for i, arg := range args {
 			value, err := s.Eval(arg)
@@ -235,5 +245,6 @@ func (s *Scope) call(fn interface{}, args []ast.Node) (value interface{}, err er
 		}
 		return fn(vargs...)
 	}
+
 	return nil, fmt.Errorf("cannot use %#v as a function", fn)
 }
