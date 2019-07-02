@@ -24,6 +24,8 @@ var GlobalsModule = &Module{
 	Funcs: []*Func{
 		&Func{Name: "eval", F: evalFn},
 		&Func{Name: "eval-file", F: evalFileFn},
+		&Func{Name: "load", F: loadFn},
+		&Func{Name: "load-file", F: loadFileFn},
 		&Func{Name: "slurp", F: slurpFn},
 		&Func{Name: "true", F: true},
 		&Func{Name: "false", F: false},
@@ -137,6 +139,57 @@ var evalFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 
 	return g.Eval(NewEnv())
 }, CheckArity(1))
+
+func loadFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) != 1 {
+		return nil, errors.New("load function takes a single string argument")
+	}
+
+	r, err := scope.Eval(args[0])
+	if err != nil {
+		return nil, err
+	}
+	code, ok := r.(string)
+	if !ok {
+		return nil, errParameterType
+	}
+
+	node, err := ParseString(scope.fset, "", code)
+	if err != nil {
+		return nil, err
+	}
+
+	return scope.Eval(node)
+}
+
+func loadFileFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) != 1 {
+		return nil, errors.New("load-file function takes a single string argument")
+	}
+
+	r, err := scope.Eval(args[0])
+	if err != nil {
+		return nil, err
+	}
+
+	file, ok := r.(string)
+	if !ok {
+		return nil, errParameterType
+	}
+	realPath := path.Join(BasePath, file)
+	data, err := ioutil.ReadFile(realPath)
+	if err != nil {
+		return nil, err
+	}
+	code := string(data)
+
+	node, err := ParseString(scope.fset, file, code)
+	if err != nil {
+		return nil, err
+	}
+
+	return scope.Eval(node)
+}
 
 var slurpFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 	file, ok := args[0].(string)

@@ -158,27 +158,62 @@ var evalList = []struct {
 		int64(3),
 	},
 
+	// load
+	{
+		"(load \"(+ 1 2)\")",
+		int64(3),
+	},
+	{
+		"(load \"(fn f [x] (* x x))\") (f 5)",
+		int64(25),
+	},
+
 	// slurp
-	// {
-	// 	"(slurp \"nonexistent.gel\")",
-	// 	errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
-	// },
+
+	{
+		"(slurp \"nonexistent.gel\")",
+		errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
+	},
 	{
 		"(slurp \"test.gel\")",
-		"(+ 1 2)",
+		"(fn f [x] (* x x))(+ 1 2)",
 	},
 
 	// eval-file
-	// {
-	// 	"(eval-file \"nonexistent.gel\")",
-	// 	errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
-	// },
+
+	{
+		"(eval-file \"nonexistent.gel\")",
+		errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
+	},
 	{
 		"(eval-file \"test.gel\")",
 		int64(3),
 	},
 	{
+		"(eval-file \"test.gel\") (f 5)",
+		errorf("twik source:1:25: undefined symbol: f"),
+	},
+	{
 		"(eval-file \"testerror.gel\")",
+		errorf("testerror.gel:1:8: undefined symbol: x"),
+	},
+
+	// load-file
+
+	{
+		"(load-file \"nonexistent.gel\")",
+		errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
+	},
+	{
+		"(load-file \"test.gel\")",
+		int64(3),
+	},
+	{
+		"(load-file \"test.gel\") (f 5)",
+		int64(25),
+	},
+	{
+		"(load-file \"testerror.gel\")",
 		errorf("testerror.gel:1:8: undefined symbol: x"),
 	},
 
