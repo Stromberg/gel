@@ -54,16 +54,15 @@ var GlobalsModule = &Module{
 		&Func{Name: "do", F: doFn},
 		&Func{Name: "code", F: codeFn},
 		&Func{Name: "func", F: funcFn},
+		&Func{Name: "fn", F: funcFn},
 		&Func{Name: "for", F: forFn},
 		&Func{Name: "vec", F: vecFn},
 		&Func{Name: "vec2list", F: vecToListFn},
 		&Func{Name: "list2vec", F: listToVecFn},
-		&Func{Name: "list", F: listFn},
-		&Func{Name: "[]", F: listFn},
+		&Func{Name: "list", F: NewList},
 		&Func{Name: "vec?", F: isVecFn},
 		&Func{Name: "list?", F: isListFn},
-		&Func{Name: "{}", F: dictFn},
-		&Func{Name: "dict", F: dictFn},
+		&Func{Name: "dict", F: NewDict},
 		&Func{Name: "dict?", F: isDictFn},
 		&Func{Name: "dict-keys", F: dictKeysFn},
 		&Func{Name: "get", F: getFn},
@@ -104,14 +103,15 @@ var GlobalsModule = &Module{
 		&Func{Name: "time", F: timeFn},
 	},
 	LispFuncs: []*LispFunc{
-		&LispFunc{Name: "identity", F: "(func (x) x)"},
-		&LispFunc{Name: "empty?", F: "(func (x) (== (len x) 0))"},
-		&LispFunc{Name: "first", F: "(func (s) (get s 0))"},
-		&LispFunc{Name: "second", F: "(func (s) (get s 1))"},
-		&LispFunc{Name: "rest", F: "(func (s) (skip 1 s))"},
-		&LispFunc{Name: "last", F: "(func (s) (if (empty? s) nil (get s (- (len s) 1))))"},
-		&LispFunc{Name: "inc", F: "(func (s) (+ s 1))"},
-		&LispFunc{Name: "dec", F: "(func (s) (- s 1))"},
+		&LispFunc{Name: "identity", F: "(func [x] x)"},
+		&LispFunc{Name: "empty?", F: "(func [x] (== (len x) 0))"},
+		&LispFunc{Name: "first", F: "(func [s] (get s 0))"},
+		&LispFunc{Name: "second", F: "(func [s] (get s 1))"},
+		&LispFunc{Name: "rest", F: "(func [s] (skip 1 s))"},
+		&LispFunc{Name: "last", F: "(func [s] (if (empty? s) nil (get s (- (len s) 1))))"},
+		&LispFunc{Name: "inc", F: "(func [s] (+ s 1))"},
+		&LispFunc{Name: "dec", F: "(func [s] (- s 1))"},
+		&LispFunc{Name: "def", F: "var"},
 	},
 }
 
@@ -230,19 +230,6 @@ func vecFn(args ...interface{}) (value interface{}, err error) {
 	return res, nil
 }
 
-var dictFn = SimpleFunc(func(args ...interface{}) interface{} {
-	if len(args) == 0 {
-		return map[interface{}]interface{}{}
-	}
-
-	res := make(map[interface{}]interface{})
-	for i := 0; i+1 < len(args); i += 2 {
-		res[args[i]] = args[i+1]
-	}
-
-	return res
-}, CheckArityEven())
-
 var dictKeysFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 	dict, ok := args[0].(map[interface{}]interface{})
 	if !ok {
@@ -259,19 +246,6 @@ var dictKeysFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 
 	return keys, nil
 }, CheckArity(1))
-
-func listFn(args ...interface{}) (value interface{}, err error) {
-	if len(args) == 0 {
-		return []interface{}{}, nil
-	}
-
-	res := make([]interface{}, len(args))
-	for i, arg := range args {
-		res[i] = arg
-	}
-
-	return res, nil
-}
 
 func vecToListFn(args ...interface{}) (value interface{}, err error) {
 	if len(args) != 1 {
@@ -1344,7 +1318,7 @@ func funcFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 		name = symbol.Name
 		i++
 	}
-	list, ok := args[i].(*ast.List)
+	list, ok := args[i].(*ast.ListList)
 	if !ok {
 		return nil, errors.New(`func takes a list of parameters`)
 	}

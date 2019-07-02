@@ -20,7 +20,7 @@ func FindModule(name string) *Module {
 	return nil
 }
 
-// RegisterModule registers a new Module.
+// RegisterModules registers a new Module.
 func RegisterModules(modules ...*Module) {
 	for _, m := range modules {
 		registeredModules = append(registeredModules, m)

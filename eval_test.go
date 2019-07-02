@@ -159,20 +159,20 @@ var evalList = []struct {
 	},
 
 	// slurp
-	{
-		"(slurp \"nonexistent.gel\")",
-		errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
-	},
+	// {
+	// 	"(slurp \"nonexistent.gel\")",
+	// 	errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
+	// },
 	{
 		"(slurp \"test.gel\")",
 		"(+ 1 2)",
 	},
 
 	// eval-file
-	{
-		"(eval-file \"nonexistent.gel\")",
-		errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
-	},
+	// {
+	// 	"(eval-file \"nonexistent.gel\")",
+	// 	errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
+	// },
 	{
 		"(eval-file \"test.gel\")",
 		int64(3),
@@ -275,27 +275,27 @@ var evalList = []struct {
 
 	// []
 	{
-		`([])`,
+		`[]`,
 		[]interface{}{},
 	},
 	{
-		`([] 12.0)`,
+		`[12.0]`,
 		[]interface{}{12.0},
 	},
 	{
-		`([] 12)`,
+		`[12]`,
 		[]interface{}{int64(12)},
 	},
 	{
-		`([] 12 3.14)`,
+		`[12 3.14]`,
 		[]interface{}{int64(12), 3.14},
 	},
 	{
-		`([] 12.0 "do")`,
+		`[12.0 "do"]`,
 		[]interface{}{12.0, "do"},
 	},
 	{
-		`([] (vec 12 3.14))`,
+		`[(vec 12 3.14)]`,
 		[]interface{}{[]float64{12.0, 3.14}},
 	},
 
@@ -350,7 +350,7 @@ var evalList = []struct {
 	},
 	{
 		`(dict "d")`,
-		errorf(`twik source:1:2: Wrong number of parameters`),
+		errorf(`twik source:1:2: dict requires an even number of arguments`),
 	},
 
 	// :
@@ -370,19 +370,27 @@ var evalList = []struct {
 		`(:d (dict :a 12.0))`,
 		false,
 	},
+	{
+		`(:d { :d  12.0 } )`,
+		12.0,
+	},
 
 	// {}
 	{
-		`({})`,
+		`{}`,
 		map[interface{}]interface{}{},
 	},
 	{
-		`({} "d" 12.0)`,
+		`{"d" 12.0}`,
 		map[interface{}]interface{}{"d": 12.0},
 	},
 	{
-		`({} "d")`,
-		errorf(`twik source:1:2: Wrong number of parameters`),
+		`{"d"}`,
+		errorf(`twik source:1:1: dict requires an even number of arguments`),
+	},
+	{
+		`{"d" [12.0]}`,
+		map[interface{}]interface{}{"d": []interface{}{12.0}},
 	},
 
 	// dict?
@@ -801,19 +809,19 @@ var evalList = []struct {
 		errorf(`twik source:1:2: Error in parameter type`),
 	},
 	{
-		`(apply (func (x) (+ 2 x)) (list 2))`,
+		`(apply (func [x] (+ 2 x)) (list 2))`,
 		int64(4),
 	},
 	{
-		`(apply (func (x) (+ 2 x)) (list 1 2 3))`,
+		`(apply (func [x] (+ 2 x)) (list 1 2 3))`,
 		errorf(`twik source:1:2: anonymous function takes one argument`),
 	},
 	{
-		`(apply (func (x y z) (+ 2.0 x y z)) (list 1 2 3))`,
+		`(apply (func [x y z] (+ 2.0 x y z)) (list 1 2 3))`,
 		8.0,
 	},
 	{
-		`(apply (func (x y) (* x y)) (list 1.0 2.0 3.0) (list 1 2 3))`,
+		`(apply (func [x y] (* x y)) (list 1.0 2.0 3.0) (list 1 2 3))`,
 		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
@@ -835,19 +843,19 @@ var evalList = []struct {
 		errorf(`twik source:1:2: Error in parameter type`),
 	},
 	{
-		`(reduce (func (a b) (+ a b)) (list 2) 1)`,
+		`(reduce (func [a b] (+ a b)) (list 2) 1)`,
 		int64(3),
 	},
 	{
-		`(reduce (func (a b) (+ a b)) (list 1 2 3 4) 0)`,
+		`(reduce (func [a b] (+ a b)) (list 1 2 3 4) 0)`,
 		int64(10),
 	},
 	{
-		`(reduce (func (a b) (+ a b)) (list 2))`,
+		`(reduce (func [a b] (+ a b)) (list 2))`,
 		int64(2),
 	},
 	{
-		`(reduce (func (a b) (+ a b)) (list 1 2 3 4))`,
+		`(reduce (func [a b] (+ a b)) (list 1 2 3 4))`,
 		int64(10),
 	},
 
@@ -857,31 +865,31 @@ var evalList = []struct {
 		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
-		`(map (func (x) (+ 1.0 x)) (list 12.0))`,
+		`(map (func [x] (+ 1.0 x)) [12.0])`,
 		[]interface{}{13.0},
 	},
 	{
-		`(map (func (x) (+ 1 x)) (list 12))`,
+		`(map (func [x] (+ 1 x)) [12])`,
 		[]interface{}{int64(13)},
 	},
 	{
-		`(map (func (x) (+ 1 x)) (vec 12))`,
+		`(map (func [x] (+ 1 x)) (vec 12))`,
 		[]interface{}{13.0},
 	},
 	{
-		`(map (func (x) (+ 1.0 x)) (list 12.0 3))`,
+		`(map (func [x] (+ 1.0 x)) (list 12.0 3))`,
 		[]interface{}{13.0, 4.0},
 	},
 	{
-		`(map (func (x) (+ 2 x)) (list 1 2 3))`,
+		`(map (func [x] (+ 2 x)) (list 1 2 3))`,
 		[]interface{}{int64(3), int64(4), int64(5)},
 	},
 	{
-		`(map (func (x) (+ 2.0 x)) (list 1 2 3))`,
+		`(map (func [x] (+ 2.0 x)) (list 1 2 3))`,
 		[]interface{}{3.0, 4.0, 5.0},
 	},
 	{
-		`(map (func (x y) (* x y)) (list 1.0 2.0 3.0) (list 1 2 3))`,
+		`(map (func [x y] (* x y)) [1.0 2.0 3.0] [1 2 3])`,
 		[]interface{}{1.0, 4.0, 9.0},
 	},
 
@@ -891,103 +899,103 @@ var evalList = []struct {
 		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
-		`(map-indexed (func (i x) (+ i x)) (list 12.0))`,
+		`(map-indexed (func [i x] (+ i x)) (list 12.0))`,
 		[]interface{}{12.0},
 	},
 	{
-		`(map-indexed (func (i x) (* 0 x)) (list 12))`,
+		`(map-indexed (func [i x] (* 0 x)) (list 12))`,
 		[]interface{}{int64(0)},
 	},
 	{
-		`(map-indexed (func (i x) (+ 0 x)) (vec 12))`,
+		`(map-indexed (func [i x] (+ 0 x)) (vec 12))`,
 		[]interface{}{12.0},
 	},
 	{
-		`(map-indexed (func (i x) (+ i x)) (list 12.0 3))`,
+		`(map-indexed (func [i x] (+ i x)) (list 12.0 3))`,
 		[]interface{}{12.0, int64(4)},
 	},
 	{
-		`(map-indexed (func (i x) (+ i x)) (list 1 2 3))`,
+		`(map-indexed (func [i x] (+ i x)) (list 1 2 3))`,
 		[]interface{}{int64(1), int64(3), int64(5)},
 	},
 	{
-		`(map-indexed (func (i x y) (+ i (* x y))) (list 1.0 2.0 3.0) (list 1 2 3))`,
+		`(map-indexed (func [i x y] (+ i (* x y))) (list 1.0 2.0 3.0) (list 1 2 3))`,
 		[]interface{}{1.0, 5.0, 11.0},
 	},
 
 	// filter
 	{
-		`(filter (func (x) (+ 1.0 x)))`,
+		`(filter (func [x] (+ 1.0 x)))`,
 		errorf(`twik source:1:2: filter takes two arguments`),
 	},
 	{
-		`(filter (func (x) (+ 1.0 x)) (list 1 2))`,
+		`(filter (func [x] (+ 1.0 x)) (list 1 2))`,
 		errorf(`twik source:1:2: callback must return bool`),
 	},
 	{
-		`(filter (func (x) (> x 12.0)) (list 12.0))`,
+		`(filter (func [x] (> x 12.0)) (list 12.0))`,
 		[]interface{}{},
 	},
 	{
-		`(filter (func (x) (> x 11.0)) (list 12.0))`,
+		`(filter (func [x] (> x 11.0)) (list 12.0))`,
 		[]interface{}{12.0},
 	},
 	{
-		`(filter (func (x) (> x 11.0)) (list 12.0 10.0 14.0))`,
+		`(filter (func [x] (> x 11.0)) (list 12.0 10.0 14.0))`,
 		[]interface{}{12.0, 14.0},
 	},
 	{
-		`(filter (func (x) (+ 1.0 x)) (vec 1 2))`,
+		`(filter (func [x] (+ 1.0 x)) (vec 1 2))`,
 		errorf(`twik source:1:2: callback must return bool`),
 	},
 	{
-		`(filter (func (x) (> x 12.0)) (vec 12.0))`,
+		`(filter (func [x] (> x 12.0)) (vec 12.0))`,
 		[]float64{},
 	},
 	{
-		`(filter (func (x) (> x 11.0)) (vec 12.0))`,
+		`(filter (func [x] (> x 11.0)) (vec 12.0))`,
 		[]float64{12.0},
 	},
 	{
-		`(filter (func (x) (> x 11.0)) (vec 12.0 10.0 14.0))`,
+		`(filter (func [x] (> x 11.0)) (vec 12.0 10.0 14.0))`,
 		[]float64{12.0, 14.0},
 	},
 
 	// count-if
 	{
-		`(count-if (func (x) (+ 1.0 x)))`,
+		`(count-if (func [x] (+ 1.0 x)))`,
 		errorf(`twik source:1:2: count-if takes two arguments`),
 	},
 	{
-		`(count-if (func (x) (+ 1.0 x)) (list 1 2))`,
+		`(count-if (func [x] (+ 1.0 x)) (list 1 2))`,
 		errorf(`twik source:1:2: callback must return bool`),
 	},
 	{
-		`(count-if (func (x) (> x 12.0)) (list 12.0))`,
+		`(count-if (func [x] (> x 12.0)) (list 12.0))`,
 		0,
 	},
 	{
-		`(count-if (func (x) (> x 11.0)) (list 12.0))`,
+		`(count-if (func [x] (> x 11.0)) (list 12.0))`,
 		1,
 	},
 	{
-		`(count-if (func (x) (> x 11.0)) (list 12.0 10.0 14.0))`,
+		`(count-if (func [x] (> x 11.0)) (list 12.0 10.0 14.0))`,
 		2,
 	},
 	{
-		`(count-if (func (x) (+ 1.0 x)) (vec 1 2))`,
+		`(count-if (func [x] (+ 1.0 x)) (vec 1 2))`,
 		errorf(`twik source:1:2: callback must return bool`),
 	},
 	{
-		`(count-if (func (x) (> x 12.0)) (vec 12.0))`,
+		`(count-if (func [x] (> x 12.0)) (vec 12.0))`,
 		0,
 	},
 	{
-		`(count-if (func (x) (> x 11.0)) (vec 12.0))`,
+		`(count-if (func [x] (> x 11.0)) (vec 12.0))`,
 		1,
 	},
 	{
-		`(count-if (func (x) (> x 11.0)) (vec 12.0 10.0 14.0))`,
+		`(count-if (func [x] (> x 11.0)) (vec 12.0 10.0 14.0))`,
 		2,
 	},
 
@@ -997,23 +1005,23 @@ var evalList = []struct {
 		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
-		`(vec-map (func (x) (+ 1.0 x)) (vec 12.0))`,
+		`(vec-map (func [x] (+ 1.0 x)) (vec 12.0))`,
 		[]float64{13.0},
 	},
 	{
-		`(vec-map (func (x) (+ 1 x)) (vec 12))`,
+		`(vec-map (func [x] (+ 1 x)) (vec 12))`,
 		[]float64{13},
 	},
 	{
-		`(vec-map (func (x) (+ 1.0 x)) (vec 12.0 3))`,
+		`(vec-map (func [x] (+ 1.0 x)) (vec 12.0 3))`,
 		[]float64{13.0, 4},
 	},
 	{
-		`(vec-map (func (x) (+ 2.0 x)) (vec 1 2 3))`,
+		`(vec-map (func [x] (+ 2.0 x)) (vec 1 2 3))`,
 		[]float64{3.0, 4.0, 5.0},
 	},
 	{
-		`(vec-map (func (x y) (* x y)) (vec 1.0 2.0 3.0) (vec 1 2 3))`,
+		`(vec-map (func [x y] (* x y)) (vec 1.0 2.0 3.0) (vec 1 2 3))`,
 		[]float64{1.0, 4.0, 9.0},
 	},
 
@@ -1023,23 +1031,23 @@ var evalList = []struct {
 		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
-		`(vec-map-indexed (func (i x) (+ i x)) (vec 12.0))`,
+		`(vec-map-indexed (func [i x] (+ i x)) (vec 12.0))`,
 		[]float64{12.0},
 	},
 	{
-		`(vec-map-indexed (func (i x) (* i x)) (vec 12))`,
+		`(vec-map-indexed (func [i x] (* i x)) (vec 12))`,
 		[]float64{0},
 	},
 	{
-		`(vec-map-indexed (func (i x) (+ i x)) (vec 12.0 3))`,
+		`(vec-map-indexed (func [i x] (+ i x)) (vec 12.0 3))`,
 		[]float64{12.0, 4},
 	},
 	{
-		`(vec-map-indexed (func (i x) (+ i x)) (vec 1 2 3))`,
+		`(vec-map-indexed (func [i x] (+ i x)) (vec 1 2 3))`,
 		[]float64{1.0, 3.0, 5.0},
 	},
 	{
-		`(vec-map-indexed (func (i x y) (+ i (* x y))) (vec 1.0 2.0 3.0) (vec 1 2 3))`,
+		`(vec-map-indexed (func [i x y] (+ i (* x y))) (vec 1.0 2.0 3.0) (vec 1 2 3))`,
 		[]float64{1.0, 5.0, 11.0},
 	},
 
@@ -1151,19 +1159,19 @@ var evalList = []struct {
 		errorf(`twik source:1:2: Error in parameter type`),
 	},
 	{
-		`(vec-apply (func (x) (+ 2 x)) (vec 2))`,
+		`(vec-apply (func [x] (+ 2 x)) (vec 2))`,
 		4.0,
 	},
 	{
-		`(vec-apply (func (x) (+ 2 x)) (vec 1 2 3))`,
+		`(vec-apply (func [x] (+ 2 x)) (vec 1 2 3))`,
 		errorf(`twik source:1:2: anonymous function takes one argument`),
 	},
 	{
-		`(vec-apply (func (x y z) (+ 2.0 x y z)) (vec 1 2 3))`,
+		`(vec-apply (func [x y z] (+ 2.0 x y z)) (vec 1 2 3))`,
 		8.0,
 	},
 	{
-		`(vec-apply (func (x y) (* x y)) (list 1.0 2.0 3.0) (list 1 2 3))`,
+		`(vec-apply (func [x y] (* x y)) (list 1.0 2.0 3.0) (list 1 2 3))`,
 		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 
@@ -1199,11 +1207,11 @@ var evalList = []struct {
 		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
-		`(repeatedly 1 (func () 3.14))`,
+		`(repeatedly 1 (func [] 3.14))`,
 		[]interface{}{3.14},
 	},
 	{
-		`(repeatedly 3 (func () 3.14))`,
+		`(repeatedly 3 (func [] 3.14))`,
 		[]interface{}{3.14, 3.14, 3.14},
 	},
 
@@ -1869,6 +1877,10 @@ var evalList = []struct {
 		"(var x)\n(var x)",
 		errorf("twik source:2:2: symbol already defined in current scope: x"),
 	},
+	{
+		`(def x (+ 1 2)) x`,
+		3,
+	},
 
 	// set
 	{
@@ -1911,13 +1923,17 @@ var evalList = []struct {
 
 	// func
 	{
-		`((func (a b) (+ a b)) 1 2)`,
+		`((func [a b] (+ a b)) 1 2)`,
+		3,
+	},
+	{
+		`((fn [a b] (+ a b)) 1 2)`,
 		3,
 	}, {
-		`(var add (do (var x 0) (func (n) (set x (+ x n)) x))) (add 1) (add 2)`,
+		`(var add (do (var x 0) (func [n] (set x (+ x n)) x))) (add 1) (add 2)`,
 		3,
 	}, {
-		`(func add (a b) (+ a b)) (add 1 2)`,
+		`(func add [a b] (+ a b)) (add 1 2)`,
 		3,
 	}, {
 		`(func)`,
@@ -1932,20 +1948,24 @@ var evalList = []struct {
 		`(func f 2)`,
 		errorf("twik source:1:2: func takes a list of parameters"),
 	}, {
-		`(func f (a)) (f 1 2)`,
+		`(func f [a]) (f 1 2)`,
 		errorf(`twik source:1:2: func takes a body sequence`),
 	}, {
-		"(var f (func (a) 1))\n(f 1 2)",
+		"(var f (func [a] 1))\n(f 1 2)",
 		errorf(`twik source:2:2: anonymous function takes one argument`),
 	}, {
-		"(func f () 1)\n(f 1)",
+		"(func f [] 1)\n(f 1)",
 		errorf(`twik source:2:2: function "f" takes no arguments`),
 	}, {
-		"(func f (a) 1)\n(f 1 2)",
+		"(func f [a] 1)\n(f 1 2)",
 		errorf(`twik source:2:2: function "f" takes one argument`),
 	}, {
-		"(func f (a b) 1)\n(f 1)",
+		"(func f [a b] 1)\n(f 1)",
 		errorf(`twik source:2:2: function "f" takes 2 arguments`),
+	},
+	{
+		`(fn f [i s] (if (> i 0) (f (dec i) (inc s)) s)) (f 10 0)`,
+		10,
 	},
 
 	// if

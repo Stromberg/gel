@@ -70,6 +70,26 @@ type List struct {
 func (s *List) Pos() Pos { return s.LParens }
 func (s *List) End() Pos { return s.RParens + 1 }
 
+// ListList represents a list of data from parsed twik code.
+type ListList struct {
+	LParens Pos
+	RParens Pos
+	Nodes   []Node
+}
+
+func (s *ListList) Pos() Pos { return s.LParens }
+func (s *ListList) End() Pos { return s.RParens + 1 }
+
+// DictList represents a list of dictionary entries from parsed twik code.
+type DictList struct {
+	LParens Pos
+	RParens Pos
+	Nodes   []Node
+}
+
+func (s *DictList) Pos() Pos { return s.LParens }
+func (s *DictList) End() Pos { return s.RParens + 1 }
+
 // Root represents the root of parsed twik code.
 type Root struct {
 	First Pos
@@ -106,7 +126,7 @@ func ParseString(fset *FileSet, name string, code string) (Node, error) {
 		node, err = p.next()
 	}
 	if err != io.EOF {
-		if err == errOpened || err == errClosed {
+		if missingParenAnyType(err) {
 			return nil, p.ierrorf(p.i, "%v", err)
 		}
 		return nil, err
@@ -122,8 +142,25 @@ type parser struct {
 	i    int
 }
 
-var errClosed = errors.New("unexpected )")
-var errOpened = errors.New("missing )")
+func missingParenAnyType(err error) bool {
+	return err == errOpenedParen ||
+		err == errClosedParen ||
+		err == errOpenedBracket ||
+		err == errClosedBracket ||
+		err == errOpenedBrace ||
+		err == errClosedBrace
+}
+
+func isRightClose(r rune) bool {
+	return r == ')' || r == ']' || r == '}'
+}
+
+var errClosedParen = errors.New("unexpected )")
+var errOpenedParen = errors.New("missing )")
+var errClosedBracket = errors.New("unexpected ]")
+var errOpenedBracket = errors.New("missing ]")
+var errClosedBrace = errors.New("unexpected }")
+var errOpenedBrace = errors.New("missing }")
 
 type closedError struct {
 }
@@ -160,17 +197,17 @@ func (p *parser) next() (Node, error) {
 	p.i += size
 
 	if r == ')' {
-		return nil, errClosed
+		return nil, errClosedParen
 	}
 	if r == '(' {
 		var nodes []Node
 		for {
 			node, err := p.next()
-			if err == errClosed {
+			if err == errClosedParen {
 				break
 			}
 			if err == io.EOF {
-				return nil, errOpened
+				return nil, errOpenedParen
 			}
 			if err != nil {
 				return nil, err
@@ -178,6 +215,58 @@ func (p *parser) next() (Node, error) {
 			nodes = append(nodes, node)
 		}
 		list := &List{
+			LParens: p.pos(start),
+			RParens: p.pos(p.i - 1),
+			Nodes:   nodes,
+		}
+		return list, nil
+	}
+
+	if r == ']' {
+		return nil, errClosedBracket
+	}
+	if r == '[' {
+		var nodes []Node
+		for {
+			node, err := p.next()
+			if err == errClosedBracket {
+				break
+			}
+			if err == io.EOF {
+				return nil, errOpenedBracket
+			}
+			if err != nil {
+				return nil, err
+			}
+			nodes = append(nodes, node)
+		}
+		list := &ListList{
+			LParens: p.pos(start),
+			RParens: p.pos(p.i - 1),
+			Nodes:   nodes,
+		}
+		return list, nil
+	}
+
+	if r == '}' {
+		return nil, errClosedBrace
+	}
+	if r == '{' {
+		var nodes []Node
+		for {
+			node, err := p.next()
+			if err == errClosedBrace {
+				break
+			}
+			if err == io.EOF {
+				return nil, errOpenedBrace
+			}
+			if err != nil {
+				return nil, err
+			}
+			nodes = append(nodes, node)
+		}
+		list := &DictList{
 			LParens: p.pos(start),
 			RParens: p.pos(p.i - 1),
 			Nodes:   nodes,
@@ -200,7 +289,7 @@ func (p *parser) next() (Node, error) {
 			r, size = utf8.DecodeRuneInString(p.code[p.i:])
 			if r == '.' {
 				dot = true
-			} else if r == ')' || unicode.IsSpace(r) {
+			} else if isRightClose(r) || unicode.IsSpace(r) {
 				break
 			}
 			p.i += size
@@ -273,7 +362,7 @@ func (p *parser) next() (Node, error) {
 			}
 			r, size = utf8.DecodeRuneInString(p.code[p.i:])
 			p.i += size
-			if r == ')' || unicode.IsSpace(r) {
+			if isRightClose(r) || unicode.IsSpace(r) {
 				p.i -= size
 				break
 			}
@@ -286,7 +375,7 @@ func (p *parser) next() (Node, error) {
 	// symbol
 	for p.i < len(p.code) {
 		r, size = utf8.DecodeRuneInString(p.code[p.i:])
-		if r == ')' || unicode.IsSpace(r) {
+		if isRightClose(r) || unicode.IsSpace(r) {
 			break
 		}
 		p.i += size

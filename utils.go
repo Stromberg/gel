@@ -1,6 +1,7 @@
 package gel
 
 import (
+	"errors"
 	"reflect"
 )
 
@@ -85,6 +86,36 @@ func ToList(data interface{}) (res []interface{}, ok bool) {
 	}
 
 	return nil, false
+}
+
+func NewDict(args ...interface{}) (value interface{}, err error) {
+	if len(args)%2 != 0 {
+		return nil, errors.New("dict requires an even number of arguments")
+	}
+
+	if len(args) == 0 {
+		return map[interface{}]interface{}{}, nil
+	}
+
+	res := make(map[interface{}]interface{})
+	for i := 0; i+1 < len(args); i += 2 {
+		res[args[i]] = args[i+1]
+	}
+
+	return res, nil
+}
+
+func NewList(args ...interface{}) (value interface{}, err error) {
+	if len(args) == 0 {
+		return []interface{}{}, nil
+	}
+
+	res := make([]interface{}, len(args))
+	for i, arg := range args {
+		res[i] = arg
+	}
+
+	return res, nil
 }
 
 func MakeAllEitherSliceOrValue(vs ...interface{}) ([]interface{}, error) {

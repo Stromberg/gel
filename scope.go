@@ -1,4 +1,4 @@
-// package gel implements a tiny embeddable language for Go.
+// Package gel implements a tiny embeddable language for Go.
 //
 // For details, see the blog post:
 //
@@ -124,6 +124,7 @@ func (s *Scope) Branch() *Scope {
 }
 
 var emptyList = make([]interface{}, 0)
+var emptyDict = make(map[interface{}]interface{}, 0)
 
 func (s *Scope) errorAt(node ast.Node, err error) error {
 	if _, ok := err.(*Error); ok {
@@ -169,6 +170,32 @@ func (s *Scope) Eval(node ast.Node) (value interface{}, err error) {
 			return nil, s.errorAt(node.Nodes[0], err)
 		}
 		return value, nil
+	case *ast.ListList:
+		if len(node.Nodes) == 0 {
+			return emptyList, nil
+		}
+		vargs := make([]interface{}, len(node.Nodes))
+		for i, arg := range node.Nodes {
+			value, err := s.Eval(arg)
+			if err != nil {
+				return nil, err
+			}
+			vargs[i] = value
+		}
+		return NewList(vargs...)
+	case *ast.DictList:
+		if len(node.Nodes) == 0 {
+			return emptyDict, nil
+		}
+		vargs := make([]interface{}, len(node.Nodes))
+		for i, arg := range node.Nodes {
+			value, err := s.Eval(arg)
+			if err != nil {
+				return nil, err
+			}
+			vargs[i] = value
+		}
+		return NewDict(vargs...)
 	case *ast.Root:
 		for _, node := range node.Nodes {
 			value, err = s.Eval(node)

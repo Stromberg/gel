@@ -108,6 +108,30 @@ var parserTests = []struct {
 		},
 	},
 	{
+		`[]`,
+		[]ast.Node{
+			&ast.ListList{LParens: 1, RParens: 2},
+		},
+	},
+	{
+		` [ ] `,
+		[]ast.Node{
+			&ast.ListList{LParens: 2, RParens: 4},
+		},
+	},
+	{
+		`{}`,
+		[]ast.Node{
+			&ast.DictList{LParens: 1, RParens: 2},
+		},
+	},
+	{
+		` { } `,
+		[]ast.Node{
+			&ast.DictList{LParens: 2, RParens: 4},
+		},
+	},
+	{
 		`"foo"`,
 		[]ast.Node{
 			&ast.String{Input: `"foo"`, InputPos: 1, Value: "foo"},
@@ -180,6 +204,51 @@ var parserTests = []struct {
 						RParens: 12,
 					},
 					&ast.Int{Input: "4", InputPos: 14, Value: 4},
+				},
+				RParens: 15,
+			},
+		},
+	},
+	{
+		`[3 (+ 4 5) 6]`,
+		[]ast.Node{
+			&ast.ListList{
+				LParens: 1,
+				Nodes: []ast.Node{
+					&ast.Int{Input: "3", InputPos: 2, Value: 3},
+					&ast.List{
+						LParens: 4,
+						Nodes: []ast.Node{
+							&ast.Symbol{Name: "+", NamePos: 5},
+							&ast.Int{Input: "4", InputPos: 7, Value: 4},
+							&ast.Int{Input: "5", InputPos: 9, Value: 5},
+						},
+						RParens: 10,
+					},
+					&ast.Int{Input: "6", InputPos: 12, Value: 6},
+				},
+				RParens: 13,
+			},
+		},
+	},
+	{
+		`{3 (+ 4 5) 6 7}`,
+		[]ast.Node{
+			&ast.DictList{
+				LParens: 1,
+				Nodes: []ast.Node{
+					&ast.Int{Input: "3", InputPos: 2, Value: 3},
+					&ast.List{
+						LParens: 4,
+						Nodes: []ast.Node{
+							&ast.Symbol{Name: "+", NamePos: 5},
+							&ast.Int{Input: "4", InputPos: 7, Value: 4},
+							&ast.Int{Input: "5", InputPos: 9, Value: 5},
+						},
+						RParens: 10,
+					},
+					&ast.Int{Input: "6", InputPos: 12, Value: 6},
+					&ast.Int{Input: "7", InputPos: 14, Value: 7},
 				},
 				RParens: 15,
 			},
