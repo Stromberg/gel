@@ -36,6 +36,10 @@ var StdLibModule = &Module{
 		&Func{Name: "pos-inf?", F: SimpleFunc(func(v float64) bool { return math.IsInf(v, 0) }, CheckArity(1), ParamToFloat64(0))},
 		&Func{Name: "combinations", F: combinationsFn},
 		&Func{Name: "transpose", F: transposeFn},
+		&Func{
+			Name:      "in-range?",
+			Signature: "((in-range? min max) v)",
+			F:         inRangeFn},
 	},
 	LispFuncs: []*LispFunc{
 		// &LispFunc{Name: "cap", F: "(func (lower upper) (func (x) (max lower (min upper x))))"},
@@ -105,3 +109,9 @@ var transposeFn = ErrFunc(func(listOfLists []interface{}) (interface{}, error) {
 
 	return res, nil
 }, CheckArity(1))
+
+var inRangeFn = SimpleFunc(func(min, max float64) interface{} {
+	return SimpleFunc(func(v float64) interface{} {
+		return v >= min && v <= max
+	}, CheckArity(1), ParamToFloat64(0))
+}, CheckArity(2), ParamToFloat64(0), ParamToFloat64(1))

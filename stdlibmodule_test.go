@@ -58,6 +58,8 @@ func TestStdLibModuleMath(t *testing.T) {
 	test("((positive 1.0) 3.0)", 3.0)
 	test("((positive 1.0) -1.0)", 1.0)
 	test("((positive 1.0) nan)", 1.0)
+	test("((in-range? 0 4) 3)", true)
+	test("((in-range? 0 4) 5)", false)
 }
 
 func TestStdLibModuleCombinations(t *testing.T) {
