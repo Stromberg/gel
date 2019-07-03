@@ -46,11 +46,7 @@ var StdLibModule = &Module{
 	},
 	Scripts: []*Script{ // Mainly for test
 		&Script{Name: "", Source: `
-			(func cap 
-				[lower upper]
-					(func [x]
-						(max lower 
-							(min upper x))))`,
+			(var cap (# (func [x] (max %1 (min %2 x)))))`,
 		},
 	},
 }

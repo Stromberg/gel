@@ -57,6 +57,7 @@ var GlobalsModule = &Module{
 		&Func{Name: "code", F: codeFn},
 		&Func{Name: "func", F: funcFn},
 		&Func{Name: "fn", F: funcFn},
+		&Func{Name: "#", F: macroFn},
 		&Func{Name: "for", F: forFn},
 		&Func{Name: "vec", F: vecFn},
 		&Func{Name: "vec2list", F: vecToListFn},
@@ -1420,6 +1421,24 @@ func funcFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 			return nil, err
 		}
 	}
+	return fn, nil
+}
+
+func macroFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) != 1 {
+		return nil, errors.New(`# takes one argument`)
+	}
+
+	node := args[0]
+
+	fn := func(args ...interface{}) (value interface{}, err error) {
+		for i, arg := range args {
+			scope.SetOrCreate(fmt.Sprintf("%%%v", i+1), arg)
+		}
+
+		return scope.Eval(node)
+	}
+
 	return fn, nil
 }
 

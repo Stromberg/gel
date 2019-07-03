@@ -144,6 +144,7 @@ func (s *Scope) Eval(node ast.Node) (value interface{}, err error) {
 			err = s.errorAt(node, fmt.Errorf("%v", r))
 		}
 	}()
+
 	switch node := node.(type) {
 	case *ast.Symbol:
 		value, err := s.Get(node.Name)

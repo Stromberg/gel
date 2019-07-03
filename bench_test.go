@@ -46,3 +46,39 @@ func BenchmarkEvalFib10ExistingScope(b *testing.B) {
 		_, _ = scope.Eval(node)
 	}
 }
+
+func BenchmarkParseMacroEval(b *testing.B) {
+	fset := gel.NewFileSet()
+	node, _ := gel.ParseString(fset, "", "(repeatedly 100 (# true))")
+	scope, _ := gel.NewScope(fset)
+	for i := 0; i < b.N; i++ {
+		_, _ = scope.Eval(node)
+	}
+}
+
+func BenchmarkParseFuncEval(b *testing.B) {
+	fset := gel.NewFileSet()
+	node, _ := gel.ParseString(fset, "", "(repeatedly 10000 (func [] true))")
+	scope, _ := gel.NewScope(fset)
+	for i := 0; i < b.N; i++ {
+		_, _ = scope.Eval(node)
+	}
+}
+
+func BenchmarkParseMapMacroEval(b *testing.B) {
+	fset := gel.NewFileSet()
+	node, _ := gel.ParseString(fset, "", "(map (# (if (and (>= %1 0) (<= %1 100)) %1 3.14)) (range 0 10000 1))")
+	scope, _ := gel.NewScope(fset)
+	for i := 0; i < b.N; i++ {
+		_, _ = scope.Eval(node)
+	}
+}
+
+func BenchmarkParseMapFuncEval(b *testing.B) {
+	fset := gel.NewFileSet()
+	node, _ := gel.ParseString(fset, "", "(map (func [x] (if (and (>= x 0) (<= x 100)) x 3.14)) (range 0 10000 1))")
+	scope, _ := gel.NewScope(fset)
+	for i := 0; i < b.N; i++ {
+		_, _ = scope.Eval(node)
+	}
+}
