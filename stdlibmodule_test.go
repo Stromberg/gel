@@ -10,10 +10,10 @@ import (
 func TestStdLibModuleStrings(t *testing.T) {
 	test := func(expr string, expected interface{}) {
 		g, err := gel.New(expr)
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 		assert.NotNil(t, g)
 		s, err := g.Eval(gel.NewEnv())
-		assert.Nil(t, err)
+		assert.NoError(t, err)
 		assert.Equal(t, expected, s)
 	}
 

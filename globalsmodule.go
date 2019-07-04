@@ -104,6 +104,7 @@ var GlobalsModule = &Module{
 		&Func{Name: "rand", F: randFn()},
 		&Func{Name: "repeatedly", F: repeatedlyFn},
 		&Func{Name: "time", F: timeFn},
+		&Func{Name: "printf", F: printfFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "identity", F: "(func [x] x)"},
@@ -125,6 +126,33 @@ func errorFn(args ...interface{}) (value interface{}, err error) {
 		}
 	}
 	return nil, errors.New("error function takes a single string argument")
+}
+
+func printfFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) < 1 {
+		return nil, errors.New("printf function requires at least a string argument")
+	}
+
+	formatRaw, err := scope.Eval(args[0])
+	if err != nil {
+		return nil, err
+	}
+	format, ok := formatRaw.(string)
+	if !ok {
+		return nil, errors.New("printf requires a string argument")
+	}
+
+	vargs := make([]interface{}, len(args[1:]))
+	for i, arg := range args[1:] {
+		varg, err := scope.Eval(arg)
+		if err != nil {
+			return nil, err
+		}
+		vargs[i] = varg
+	}
+
+	err = scope.Printf(format, vargs...)
+	return nil, err
 }
 
 var evalFn = ErrFunc(func(args ...interface{}) (interface{}, error) {

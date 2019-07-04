@@ -14,9 +14,10 @@ import (
 
 // Gel is the language expression handler.
 type Gel struct {
-	node ast.Node
-	fset *ast.FileSet
-	code string
+	node           ast.Node
+	fset           *ast.FileSet
+	code           string
+	stdOutRedirect io.Writer
 }
 
 // New creates a new Gel from a code string
@@ -33,11 +34,15 @@ func NewWithName(code string, fname string) (*Gel, error) {
 		return nil, err
 	}
 
-	return &Gel{node, fset, code}, nil
+	return &Gel{node, fset, code, nil}, nil
 }
 
 func (g *Gel) Code() string {
 	return g.code
+}
+
+func (g *Gel) RedirectStdOut(writer io.Writer) {
+	g.stdOutRedirect = writer
 }
 
 // Missing returns the symbols that are missing
@@ -56,6 +61,9 @@ func (g *Gel) Eval(env *Env) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	scope.RedirectStdOut(g.stdOutRedirect)
+
 	return scope.Eval(g.node)
 }
 
@@ -73,6 +81,8 @@ func (g *Gel) Repl(env *Env) error {
 	if err != nil {
 		return err
 	}
+
+	scope.RedirectStdOut(g.stdOutRedirect)
 
 	state, err := terminal.MakeRaw(1)
 	if err != nil {

@@ -8,15 +8,17 @@ package gel
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/Stromberg/gel/ast"
 )
 
 // Scope is an environment where twik logic may be evaluated in.
 type Scope struct {
-	parent *Scope
-	fset   *ast.FileSet
-	vars   map[string]interface{}
+	parent         *Scope
+	fset           *ast.FileSet
+	vars           map[string]interface{}
+	stdOutRedirect io.Writer
 }
 
 // Error holds an error and the source position where the error was found.
@@ -71,6 +73,26 @@ func NewScope(fset *ast.FileSet) (*Scope, error) {
 	}
 
 	return scope, nil
+}
+
+func (s *Scope) RedirectStdOut(writer io.Writer) {
+	s.stdOutRedirect = writer
+}
+
+func (s *Scope) Printf(format string, args ...interface{}) error {
+	var writer io.Writer
+	for writer == nil && s != nil {
+		writer = s.stdOutRedirect
+		s = s.parent
+	}
+
+	if writer != nil {
+		s := fmt.Sprintf(format, args...)
+		_, err := writer.Write([]byte(s))
+		return err
+	}
+	_, err := fmt.Printf(format, args...)
+	return err
 }
 
 // Create defines a new symbol with the given value in the s scope.
