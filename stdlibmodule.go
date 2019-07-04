@@ -20,9 +20,15 @@ var StdLibModule = &Module{
 		&Func{Name: "strings.ToLower", F: SimpleFunc(strings.ToLower, CheckArity(1))},
 		&Func{Name: "strings.ToUpper", F: SimpleFunc(strings.ToUpper, CheckArity(1))},
 		&Func{Name: "strings.TrimSpace", F: SimpleFunc(strings.TrimSpace, CheckArity(1))},
-		&Func{Name: "printf", F: ErrFunc(func(args ...interface{}) (int, error) {
+		&Func{Name: "printf", F: ErrFunc(func(args ...interface{}) (interface{}, error) {
 			format := args[0].(string)
-			return fmt.Printf(format, args[1:]...)
+			if StdOutRedirect != nil {
+				s := fmt.Sprintf(format, args[1:]...)
+				_, err := StdOutRedirect.Write([]byte(s))
+				return nil, err
+			}
+			_, err := fmt.Printf(format, args[1:]...)
+			return nil, err
 		}, CheckArityAtLeast(1))},
 		&Func{Name: "sprintf", F: SimpleFunc(func(args ...interface{}) string {
 			format := args[0].(string)
