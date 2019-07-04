@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Stromberg/gel"
+	"github.com/stretchr/testify/assert"
 	. "gopkg.in/check.v1"
 )
 
@@ -37,6 +38,19 @@ func (S) TestEval(c *C) {
 			c.Assert(value, DeepEquals, tvalue, Commentf("Code: %s", test.code))
 		}
 	}
+}
+
+func TestSingle(t *testing.T) {
+	code := `(var add (do (var x 0) (func [n] (set x (+ x n)) x))) (add 1) (add 2)`
+	tvalue := int64(3)
+	fset := gel.NewFileSet()
+	node, err := gel.ParseString(fset, "", code)
+	assert.NoError(t, err)
+	scope, err := gel.NewScope(fset)
+	assert.NoError(t, err)
+	value, err := scope.Eval(node)
+	assert.NoError(t, err)
+	assert.Equal(t, value, tvalue)
 }
 
 func sprintfFn(args ...interface{}) (interface{}, error) {
