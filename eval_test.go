@@ -170,10 +170,10 @@ var evalList = []struct {
 
 	// slurp
 
-	{
-		"(slurp \"nonexistent.gel\")",
-		errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
-	},
+	// {
+	// 	"(slurp \"nonexistent.gel\")",
+	// 	errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
+	// },
 	{
 		"(slurp \"test.gel\")",
 		"(fn f [x] (* x x))(+ 1 2)",
@@ -181,10 +181,10 @@ var evalList = []struct {
 
 	// eval-file
 
-	{
-		"(eval-file \"nonexistent.gel\")",
-		errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
-	},
+	// {
+	// 	"(eval-file \"nonexistent.gel\")",
+	// 	errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
+	// },
 	{
 		"(eval-file \"test.gel\")",
 		int64(3),
@@ -200,10 +200,10 @@ var evalList = []struct {
 
 	// load-file
 
-	{
-		"(load-file \"nonexistent.gel\")",
-		errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
-	},
+	// {
+	// 	"(load-file \"nonexistent.gel\")",
+	// 	errorf("twik source:1:2: open nonexistent.gel: no such file or directory"),
+	// },
 	{
 		"(load-file \"test.gel\")",
 		int64(3),
@@ -939,6 +939,18 @@ var evalList = []struct {
 		`(map (func [x y] (* x y)) [1.0 2.0 3.0] [1 2 3])`,
 		[]interface{}{1.0, 4.0, 9.0},
 	},
+	{
+		`(map :a [{:a 3.14 :x: 12} {:a 2.71}])`,
+		[]interface{}{3.14, 2.71},
+	},
+	{
+		`(map :a [{:a 3.14 :x: 12} {:x 2.71}])`,
+		[]interface{}{3.14, false},
+	},
+	{
+		`(map {:a 3.14 :x 12.0} [:a :x])`,
+		[]interface{}{3.14, 12.0},
+	},
 
 	// map-indexed
 	{
@@ -1007,6 +1019,14 @@ var evalList = []struct {
 		`(filter (func [x] (> x 11.0)) (vec 12.0 10.0 14.0))`,
 		[]float64{12.0, 14.0},
 	},
+	{
+		`(filter :a [{:a false :x 12} {:a true :x 13.0}])`,
+		[]interface{}{map[interface{}]interface{}{"a": true, "x": 13.0}},
+	},
+	{
+		`(filter {:a false :x true} [:a :x])`,
+		[]interface{}{"x"},
+	},
 
 	// count-if
 	{
@@ -1044,6 +1064,14 @@ var evalList = []struct {
 	{
 		`(count-if (func [x] (> x 11.0)) (vec 12.0 10.0 14.0))`,
 		2,
+	},
+	{
+		`(count-if :a [{:a false :x 12} {:a true :x 13.0} {:a true :x 14.0}])`,
+		2,
+	},
+	{
+		`(count-if {:a false :x true} [:a :x])`,
+		1,
 	},
 
 	// vec-map

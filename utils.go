@@ -2,6 +2,7 @@ package gel
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 )
 
@@ -86,6 +87,27 @@ func ToList(data interface{}) (res []interface{}, ok bool) {
 	}
 
 	return nil, false
+}
+
+func Call(fn interface{}, args ...interface{}) (value interface{}, err error) {
+	switch fn := fn.(type) {
+	// Lookup in dict based on string
+	case string:
+		if len(args) != 1 {
+			return nil, errors.New("lookup using string requires a dictionary")
+		}
+		return getFn.(func(...interface{}) (interface{}, error))(args[0], fn)
+	// Lookup on container
+	case map[interface{}]interface{}, []interface{}, []float64:
+		if len(args) != 1 {
+			return nil, errors.New("lookup requires a key")
+		}
+		return getFn.(func(...interface{}) (interface{}, error))(fn, args[0])
+	case func(...interface{}) (interface{}, error):
+		return fn(args...)
+	}
+
+	return nil, fmt.Errorf("cannot use %#v as a function", fn)
 }
 
 func NewDict(args ...interface{}) (value interface{}, err error) {

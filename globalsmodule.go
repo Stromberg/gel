@@ -1457,26 +1457,22 @@ var mapFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
 	l := len(lists[0])
 
 	res := []interface{}{}
-	if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
-		for i := 0; i < l; i++ {
-			fnArgs := make([]interface{}, len(lists))
-			for j, list := range lists {
-				if len(list) != l {
-					return nil, errors.New("Lists must be of same length")
-				}
-				fnArgs[j] = list[i]
+	for i := 0; i < l; i++ {
+		fnArgs := make([]interface{}, len(lists))
+		for j, list := range lists {
+			if len(list) != l {
+				return nil, errors.New("Lists must be of same length")
 			}
-			r, err := fn(fnArgs...)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, r)
+			fnArgs[j] = list[i]
 		}
-
-		return res, nil
+		r, err := Call(fn, fnArgs...)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, r)
 	}
 
-	return nil, errParameterType
+	return res, nil
 }, CheckArityAtLeast(2))
 
 var mapIndexedFn = ErrFunc(func(args ...interface{}) (value interface{}, err error) {
@@ -1633,44 +1629,39 @@ func filterFn(args ...interface{}) (value interface{}, err error) {
 	switch list := args[1].(type) {
 	case []interface{}:
 		res := []interface{}{}
-		if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
-			for _, v := range list {
-				r, err := fn(v)
-				if err != nil {
-					return nil, err
-				}
-				b, ok := r.(bool)
-				if !ok {
-					return nil, errors.New("callback must return bool")
-				}
-
-				if b {
-					res = append(res, v)
-				}
+		for _, v := range list {
+			r, err := Call(fn, v)
+			if err != nil {
+				return nil, err
+			}
+			b, ok := r.(bool)
+			if !ok {
+				return nil, errors.New("callback must return bool")
 			}
 
-			return res, nil
+			if b {
+				res = append(res, v)
+			}
 		}
+		return res, nil
 	case []float64:
 		res := []float64{}
-		if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
-			for _, v := range list {
-				r, err := fn(v)
-				if err != nil {
-					return nil, err
-				}
-				b, ok := r.(bool)
-				if !ok {
-					return nil, errors.New("callback must return bool")
-				}
-
-				if b {
-					res = append(res, v)
-				}
+		for _, v := range list {
+			r, err := Call(fn, v)
+			if err != nil {
+				return nil, err
+			}
+			b, ok := r.(bool)
+			if !ok {
+				return nil, errors.New("callback must return bool")
 			}
 
-			return res, nil
+			if b {
+				res = append(res, v)
+			}
 		}
+
+		return res, nil
 	}
 
 	return nil, errParameterType
@@ -1686,44 +1677,40 @@ func countIfFn(args ...interface{}) (value interface{}, err error) {
 	switch list := args[1].(type) {
 	case []interface{}:
 		res := 0
-		if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
-			for _, v := range list {
-				r, err := fn(v)
-				if err != nil {
-					return nil, err
-				}
-				b, ok := r.(bool)
-				if !ok {
-					return nil, errors.New("callback must return bool")
-				}
-
-				if b {
-					res++
-				}
+		for _, v := range list {
+			r, err := Call(fn, v)
+			if err != nil {
+				return nil, err
+			}
+			b, ok := r.(bool)
+			if !ok {
+				return nil, errors.New("callback must return bool")
 			}
 
-			return int64(res), nil
+			if b {
+				res++
+			}
 		}
+
+		return int64(res), nil
 	case []float64:
 		res := 0
-		if fn, ok := fn.(func(...interface{}) (interface{}, error)); ok {
-			for _, v := range list {
-				r, err := fn(v)
-				if err != nil {
-					return nil, err
-				}
-				b, ok := r.(bool)
-				if !ok {
-					return nil, errors.New("callback must return bool")
-				}
-
-				if b {
-					res++
-				}
+		for _, v := range list {
+			r, err := Call(fn, v)
+			if err != nil {
+				return nil, err
+			}
+			b, ok := r.(bool)
+			if !ok {
+				return nil, errors.New("callback must return bool")
 			}
 
-			return int64(res), nil
+			if b {
+				res++
+			}
 		}
+
+		return int64(res), nil
 	}
 
 	return nil, errParameterType
