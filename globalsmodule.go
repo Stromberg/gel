@@ -1293,7 +1293,7 @@ func timeFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 	start := time.Now()
 	value, err = scope.Eval(args[0])
 	elapsed := time.Since(start)
-	fmt.Printf("Elapsed %.2f milliseconds\n", float64(elapsed.Nanoseconds())/1e6)
+	scope.Printf("Elapsed %.2f milliseconds\n", float64(elapsed.Nanoseconds())/1e6)
 	return value, err
 }
 
