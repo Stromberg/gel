@@ -830,6 +830,10 @@ var appendFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 var concatFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 	switch arg := args[0].(type) {
 	case []interface{}:
+		if len(args) == 1 {
+			return arg, nil
+		}
+
 		v := make([]interface{}, len(arg))
 		copy(v, arg)
 		for _, n := range args[1:] {
@@ -841,6 +845,10 @@ var concatFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 		}
 		return v, nil
 	case []float64:
+		if len(args) == 1 {
+			return arg, nil
+		}
+
 		v := make([]float64, len(arg))
 		copy(v, arg)
 
@@ -855,7 +863,7 @@ var concatFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 		return v, nil
 	}
 	return nil, errParameterType
-}, CheckArityAtLeast(2))
+}, CheckArityAtLeast(1))
 
 var mergeFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 	res := map[interface{}]interface{}{}

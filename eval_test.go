@@ -737,7 +737,7 @@ var evalList = []struct {
 	// concat
 	{
 		`(concat (dict))`,
-		errorf(`twik source:1:2: Wrong number of parameters`),
+		errorf(`twik source:1:2: Error in parameter type`),
 	},
 	{
 		`(concat (vec) (vec 12.0))`,
