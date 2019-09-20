@@ -1,5 +1,11 @@
 package gel
 
+import (
+	"fmt"
+
+	"github.com/ryanuber/go-glob"
+)
+
 var registeredModules = []*Module{}
 
 var BasePath = "."
@@ -27,15 +33,47 @@ func RegisterModules(modules ...*Module) {
 	}
 }
 
-// FindFunction finds the Func with the given name and the Module it is in.
-func FindFunction(name string) (*Func, *Module) {
+func AllFunctionNames() []string {
+	res := []string{}
+
+	for _, m := range registeredModules {
+		for _, f := range m.Funcs {
+			res = append(res, f.Name)
+		}
+		for _, f := range m.LispFuncs {
+			res = append(res, f.Name)
+		}
+	}
+
+	return res
+}
+
+func MatchingFuncNames(expr string) []string {
+	funcs := AllFunctionNames()
+
+	res := []string{}
+	for _, f := range funcs {
+		if glob.Glob(expr, f) {
+			res = append(res, f)
+		}
+	}
+
+	return res
+}
+
+func FunctionRepr(name string) string {
 	for _, m := range registeredModules {
 		for _, f := range m.Funcs {
 			if f.Name == name {
-				return f, m
+				return f.Repr()
+			}
+		}
+		for _, f := range m.LispFuncs {
+			if f.Name == name {
+				return f.Repr()
 			}
 		}
 	}
 
-	return nil, nil
+	return fmt.Sprintf("Function \"%v\" not found", name)
 }

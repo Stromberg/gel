@@ -128,13 +128,13 @@ func (g *Gel) Repl(env *Env) error {
 				fmt.Println("#func")
 			} else if v, ok := value.([]interface{}); ok {
 				if len(v) == 0 {
-					fmt.Println("()")
+					fmt.Println("[]")
 				} else {
-					fmt.Print("(list")
+					fmt.Print("[")
 					for _, e := range v {
 						fmt.Printf(" %#v", e)
 					}
-					fmt.Println(")")
+					fmt.Println(" ]")
 				}
 			} else if v, ok := value.([]float64); ok {
 				if len(v) == 0 {
@@ -146,6 +146,8 @@ func (g *Gel) Repl(env *Env) error {
 					}
 					fmt.Println(")")
 				}
+			} else if v, ok := value.(string); ok {
+				fmt.Println(v)
 			} else {
 				fmt.Printf("%#v\n", value)
 			}

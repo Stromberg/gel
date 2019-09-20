@@ -105,6 +105,7 @@ var GlobalsModule = &Module{
 		&Func{Name: "repeatedly", F: repeatedlyFn},
 		&Func{Name: "time", F: timeFn},
 		&Func{Name: "printf", F: printfFn},
+		&Func{Name: "docs", F: docsFn},
 	},
 	LispFuncs: []*LispFunc{
 		&LispFunc{Name: "identity", F: "(func [x] x)"},
@@ -232,6 +233,43 @@ var slurpFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 	}
 	return string(data), nil
 }, CheckArity(1))
+
+func docsFn(args ...interface{}) (interface{}, error) {
+	if len(args) == 0 {
+		fnames := AllFunctionNames()
+		res := make([]interface{}, len(fnames))
+		for i, f := range fnames {
+			res[i] = f
+		}
+
+		return res, nil
+	}
+
+	if len(args) != 1 {
+		return nil, errors.New("Expected 0 or 1 argument")
+	}
+
+	expr, ok := args[0].(string)
+	if !ok {
+		return nil, errors.New("Expected string argument")
+	}
+
+	names := MatchingFuncNames(expr)
+	if len(names) == 0 {
+		return "Function not found", nil
+	}
+
+	if len(names) == 1 {
+		return FunctionRepr(names[0]), nil
+	}
+
+	res := make([]interface{}, len(names))
+	for i, f := range names {
+		res[i] = f
+	}
+
+	return res, nil
+}
 
 func uuidFn(args ...interface{}) (value interface{}, err error) {
 	if len(args) != 0 {
@@ -887,6 +925,8 @@ var lenFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
 	case []interface{}:
 		return int64(len(arg)), nil
 	case []float64:
+		return int64(len(arg)), nil
+	case string:
 		return int64(len(arg)), nil
 	}
 	return nil, errParameterType

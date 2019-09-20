@@ -241,6 +241,24 @@ var evalList = []struct {
 		[]interface{}{int64(1), int64(2), int64(3), int64(4)},
 	},
 
+	// docs
+	{
+		`(docs 1 2)`,
+		errorf("twik source:1:2: Expected 0 or 1 argument"),
+	},
+	{
+		`(> (len (docs)) 100)`,
+		true,
+	},
+	{
+		`(docs "sort-*")`,
+		[]interface{}{"sort-asc", "sort-desc"},
+	},
+	{
+		`(docs "sort-asc")`,
+		"sort-asc\n\n",
+	},
+
 	// error
 	{
 		"(\nerror \"error message\")",

@@ -1,5 +1,7 @@
 package gel
 
+import "fmt"
+
 // Func is a description of a Module function.
 type Func struct {
 	Name        string
@@ -28,4 +30,12 @@ type Module struct {
 	Funcs       []*Func
 	LispFuncs   []*LispFunc
 	Scripts     []*Script
+}
+
+func (f *Func) Repr() string {
+	return fmt.Sprintf("%v\n%v\n%v", f.Name, f.Signature, f.Description)
+}
+
+func (f *LispFunc) Repr() string {
+	return fmt.Sprintf("%v\n%v\n%v", f.Name, f.Signature, f.Description)
 }
