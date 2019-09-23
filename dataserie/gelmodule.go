@@ -204,8 +204,8 @@ var Module = &module.Module{
 			}, utils.CheckArity(2), utils.ParamToInt(0)),
 		},
 		&module.Func{
-			Name:        "dataserie.Lead",
-			Signature:   "(dataserie.Lead ds n)",
+			Name:        "ds.Lead",
+			Signature:   "(ds.Lead ds n)",
 			Description: "Shifts the data n steps backwards in time",
 			F: utils.ErrFunc(func(ds *DataSerie, n int) (interface{}, error) {
 				if n < 0 {
