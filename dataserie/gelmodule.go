@@ -201,7 +201,7 @@ var Module = &module.Module{
 					return nil, errors.New("Cannot shift more than there is data")
 				}
 				return ds.Shift(n), nil
-			}, utils.CheckArity(2), utils.ParamToInt(0)),
+			}, utils.CheckArity(2), utils.ParamToInt(1)),
 		},
 		&module.Func{
 			Name:        "ds.Lead",
@@ -216,7 +216,7 @@ var Module = &module.Module{
 				}
 
 				return ds.Shift(-n), nil
-			}, utils.CheckArity(2), utils.ParamToInt(0)),
+			}, utils.CheckArity(2), utils.ParamToInt(1)),
 		},
 		&module.Func{
 			Name:        "ds.Union!",
