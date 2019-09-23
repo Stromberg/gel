@@ -11,6 +11,8 @@ import (
 	"io"
 
 	"github.com/Stromberg/gel/ast"
+	"github.com/Stromberg/gel/module"
+	"github.com/Stromberg/gel/utils"
 )
 
 // Scope is an environment where twik logic may be evaluated in.
@@ -33,7 +35,7 @@ func (e *Error) Error() string {
 
 // NewScope returns a new scope for evaluating logic that was parsed into fset.
 func NewScope(fset *ast.FileSet) (*Scope, error) {
-	modules := Modules()
+	modules := module.Modules()
 
 	vars := make(map[string]interface{})
 
@@ -204,7 +206,7 @@ func (s *Scope) Eval(node ast.Node) (value interface{}, err error) {
 			}
 			vargs[i] = value
 		}
-		return NewList(vargs...)
+		return utils.NewList(vargs...)
 	case *ast.DictList:
 		if len(node.Nodes) == 0 {
 			return emptyDict, nil
@@ -217,7 +219,7 @@ func (s *Scope) Eval(node ast.Node) (value interface{}, err error) {
 			}
 			vargs[i] = value
 		}
-		return NewDict(vargs...)
+		return utils.NewDict(vargs...)
 	case *ast.Root:
 		for _, node := range node.Nodes {
 			value, err = s.Eval(node)
@@ -244,5 +246,5 @@ func (s *Scope) call(fn interface{}, args []ast.Node) (value interface{}, err er
 		vargs[i] = value
 	}
 
-	return Call(fn, vargs...)
+	return utils.Call(fn, vargs...)
 }

@@ -1,4 +1,4 @@
-package gel
+package utils
 
 import (
 	"errors"
@@ -56,7 +56,7 @@ func CopySlice(v interface{}) (interface{}, error) {
 		copy(res, v.([]float64))
 		return res, nil
 	default:
-		return nil, errParameterType
+		return nil, ErrParameterType
 	}
 }
 
@@ -104,6 +104,22 @@ func ToList(data interface{}) (res []interface{}, ok bool) {
 	return nil, false
 }
 
+func MapVec(f func(float64) float64, v []float64) []float64 {
+	res := make([]float64, len(v))
+	for i := range v {
+		res[i] = f(v[i])
+	}
+	return res
+}
+
+func MapList(f func(interface{}) interface{}, v []interface{}) []interface{} {
+	res := make([]interface{}, len(v))
+	for i := range v {
+		res[i] = f(v[i])
+	}
+	return res
+}
+
 func ToVec(data interface{}) (res []float64, ok bool) {
 	switch arg := data.(type) {
 	case []interface{}:
@@ -123,13 +139,13 @@ func Call(fn interface{}, args ...interface{}) (value interface{}, err error) {
 		if len(args) != 1 {
 			return nil, errors.New("lookup using string requires a dictionary")
 		}
-		return getFn.(func(...interface{}) (interface{}, error))(args[0], fn)
+		return GetFn.(func(...interface{}) (interface{}, error))(args[0], fn)
 	// Lookup on container
 	case map[interface{}]interface{}, []interface{}, []float64:
 		if len(args) != 1 {
 			return nil, errors.New("lookup requires a key")
 		}
-		return getFn.(func(...interface{}) (interface{}, error))(fn, args[0])
+		return GetFn.(func(...interface{}) (interface{}, error))(fn, args[0])
 	case func(...interface{}) (interface{}, error):
 		return fn(args...)
 	}

@@ -1,6 +1,7 @@
-package gel
+package utils
 
 import (
+	"errors"
 	"reflect"
 )
 
@@ -51,3 +52,53 @@ func ErrFunc(v interface{}, adapters ...Adapter) interface{} {
 		return result[0].Interface(), err
 	}
 }
+
+var GetFn = ErrFunc(func(args ...interface{}) (interface{}, error) {
+	switch arg := args[0].(type) {
+	case map[interface{}]interface{}:
+		v, ok := arg[args[1]]
+		if !ok {
+			return false, nil
+		}
+		return v, nil
+	case []interface{}:
+		v := arg
+		i, ok := args[1].(int64)
+		if !ok {
+			return nil, ErrParameterType
+		}
+
+		if i < 0 {
+			if -int(i) > len(v) {
+				return nil, errors.New("Key not found")
+			}
+
+			i = int64(len(v)) + i
+		}
+
+		if int(i) >= len(v) {
+			return nil, errors.New("Key not found")
+		}
+		return v[i], nil
+	case []float64:
+		v := arg
+		i, ok := args[1].(int64)
+		if !ok {
+			return nil, ErrParameterType
+		}
+
+		if i < 0 {
+			if -int(i) > len(v) {
+				return nil, errors.New("Key not found")
+			}
+
+			i = int64(len(v)) + i
+		}
+
+		if int(i) >= len(v) {
+			return nil, errors.New("Key not found")
+		}
+		return v[i], nil
+	}
+	return nil, ErrParameterType
+}, CheckArity(2))

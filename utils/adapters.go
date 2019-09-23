@@ -1,12 +1,12 @@
-package gel
+package utils
 
 import (
 	"errors"
 )
 
 var (
-	errWrongNumberPar = errors.New("Wrong number of parameters")
-	errParameterType  = errors.New("Error in parameter type")
+	ErrWrongNumberPar = errors.New("Wrong number of parameters")
+	ErrParameterType  = errors.New("Error in parameter type")
 )
 
 type Adapter func(values ...interface{}) ([]interface{}, error)
@@ -15,7 +15,7 @@ type Adapter func(values ...interface{}) ([]interface{}, error)
 func CheckArity(n int) Adapter {
 	return func(values ...interface{}) ([]interface{}, error) {
 		if len(values) != n {
-			return []interface{}{}, errWrongNumberPar
+			return []interface{}{}, ErrWrongNumberPar
 		}
 		return values, nil
 	}
@@ -25,7 +25,7 @@ func CheckArity(n int) Adapter {
 func CheckArityAtLeast(n int) Adapter {
 	return func(values ...interface{}) ([]interface{}, error) {
 		if len(values) < n {
-			return []interface{}{}, errWrongNumberPar
+			return []interface{}{}, ErrWrongNumberPar
 		}
 		return values, nil
 	}
@@ -35,7 +35,7 @@ func CheckArityAtLeast(n int) Adapter {
 func CheckArityEven() Adapter {
 	return func(values ...interface{}) ([]interface{}, error) {
 		if len(values)%2 != 0 {
-			return []interface{}{}, errWrongNumberPar
+			return []interface{}{}, ErrWrongNumberPar
 		}
 		return values, nil
 	}
@@ -45,7 +45,7 @@ func CheckArityEven() Adapter {
 func CheckArityOdd() Adapter {
 	return func(values ...interface{}) ([]interface{}, error) {
 		if len(values)%2 != 1 {
-			return []interface{}{}, errWrongNumberPar
+			return []interface{}{}, ErrWrongNumberPar
 		}
 		return values, nil
 	}
@@ -56,7 +56,7 @@ func ParamsToSameBaseType() Adapter {
 	return func(values ...interface{}) ([]interface{}, error) {
 		if IsAnyStrings(values...) {
 			if !IsAllStrings(values) {
-				return []interface{}{}, errParameterType
+				return []interface{}{}, ErrParameterType
 			}
 		} else if IsAnyFloats(values...) {
 			for i := range values {
@@ -92,7 +92,7 @@ func ParamToFloat64(p int) Adapter {
 		case float64:
 			return values, nil
 		default:
-			return []interface{}{}, errParameterType
+			return []interface{}{}, ErrParameterType
 		}
 	}
 }
@@ -108,7 +108,7 @@ func ParamToInt64(p int) Adapter {
 			values[p] = int64(v)
 			return values, nil
 		default:
-			return []interface{}{}, errParameterType
+			return []interface{}{}, ErrParameterType
 		}
 	}
 }
@@ -128,7 +128,7 @@ func ParamToInt(p int) Adapter {
 			values[p] = int(v)
 			return values, nil
 		default:
-			return []interface{}{}, errParameterType
+			return []interface{}{}, ErrParameterType
 		}
 	}
 }

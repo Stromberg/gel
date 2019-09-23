@@ -5,53 +5,56 @@ import (
 	"fmt"
 	"math"
 	"strings"
+
+	"github.com/Stromberg/gel/module"
+	"github.com/Stromberg/gel/utils"
 )
 
 func init() {
-	RegisterModules(StdLibModule)
+	module.RegisterModules(StdLibModule)
 }
 
-var StdLibModule = &Module{
+var StdLibModule = &module.Module{
 	Name: "stdlib",
-	Funcs: []*Func{
-		// &Func{Name: "strings.Join", F: SimpleFunc(strings.Join, CheckArity(2))},
-		// &Func{Name: "strings.Split", F: SimpleFunc(strings.Split, CheckArity(2))},
-		&Func{Name: "strings.Title", F: SimpleFunc(strings.Title, CheckArity(1))},
-		&Func{Name: "strings.ToLower", F: SimpleFunc(strings.ToLower, CheckArity(1))},
-		&Func{Name: "strings.ToUpper", F: SimpleFunc(strings.ToUpper, CheckArity(1))},
-		&Func{Name: "strings.TrimSpace", F: SimpleFunc(strings.TrimSpace, CheckArity(1))},
-		&Func{Name: "sprintf", F: SimpleFunc(func(args ...interface{}) string {
+	Funcs: []*module.Func{
+		// &module.Func{Name: "strings.Join", F: utils.SimpleFunc(strings.Join, utils.CheckArity(2))},
+		// &module.Func{Name: "strings.Split", F: utils.SimpleFunc(strings.Split, utils.CheckArity(2))},
+		&module.Func{Name: "strings.Title", F: utils.SimpleFunc(strings.Title, utils.CheckArity(1))},
+		&module.Func{Name: "strings.ToLower", F: utils.SimpleFunc(strings.ToLower, utils.CheckArity(1))},
+		&module.Func{Name: "strings.ToUpper", F: utils.SimpleFunc(strings.ToUpper, utils.CheckArity(1))},
+		&module.Func{Name: "strings.TrimSpace", F: utils.SimpleFunc(strings.TrimSpace, utils.CheckArity(1))},
+		&module.Func{Name: "sprintf", F: utils.SimpleFunc(func(args ...interface{}) string {
 			format := args[0].(string)
 			return fmt.Sprintf(format, args[1:]...)
-		}, CheckArityAtLeast(1))},
-		&Func{Name: "math.Pow", F: SimpleFunc(math.Pow, CheckArity(2), ParamToFloat64(0), ParamToFloat64(1))},
-		&Func{Name: "math.Sqrt", F: SimpleFunc(math.Sqrt, CheckArity(1), ParamToFloat64(0))},
-		&Func{Name: "math.Ceil", F: SimpleFunc(math.Ceil, CheckArity(1), ParamToFloat64(0))},
-		&Func{Name: "math.Log", F: SimpleFunc(math.Log, CheckArity(1), ParamToFloat64(0))},
-		&Func{Name: "nan?", F: SimpleFunc(math.IsNaN, CheckArity(1), ParamToFloat64(0))},
-		&Func{Name: "pos-inf?", F: SimpleFunc(func(v float64) bool { return math.IsInf(v, 0) }, CheckArity(1), ParamToFloat64(0))},
-		&Func{Name: "combinations", F: combinationsFn},
-		&Func{Name: "transpose", F: transposeFn},
-		&Func{
+		}, utils.CheckArityAtLeast(1))},
+		&module.Func{Name: "math.Pow", F: utils.SimpleFunc(math.Pow, utils.CheckArity(2), utils.ParamToFloat64(0), utils.ParamToFloat64(1))},
+		&module.Func{Name: "math.Sqrt", F: utils.SimpleFunc(math.Sqrt, utils.CheckArity(1), utils.ParamToFloat64(0))},
+		&module.Func{Name: "math.Ceil", F: utils.SimpleFunc(math.Ceil, utils.CheckArity(1), utils.ParamToFloat64(0))},
+		&module.Func{Name: "math.Log", F: utils.SimpleFunc(math.Log, utils.CheckArity(1), utils.ParamToFloat64(0))},
+		&module.Func{Name: "nan?", F: utils.SimpleFunc(math.IsNaN, utils.CheckArity(1), utils.ParamToFloat64(0))},
+		&module.Func{Name: "pos-inf?", F: utils.SimpleFunc(func(v float64) bool { return math.IsInf(v, 0) }, utils.CheckArity(1), utils.ParamToFloat64(0))},
+		&module.Func{Name: "combinations", F: combinationsFn},
+		&module.Func{Name: "transpose", F: transposeFn},
+		&module.Func{
 			Name:      "in-range?",
 			Signature: "((in-range? min max) v)",
 			F:         inRangeFn},
 	},
-	LispFuncs: []*LispFunc{
-		// &LispFunc{Name: "cap", F: "(func (lower upper) (func (x) (max lower (min upper x))))"},
-		&LispFunc{Name: "pow", F: "(func [n] (func [x] (math.Pow x n)))"},
-		&LispFunc{Name: "with-default", F: "(func [d] (func [x] (if (or (nan? x) (pos-inf? x)) d x)))"},
-		&LispFunc{Name: "positive", F: "(func [d] (func [x] (if (or (nan? x) (pos-inf? x) (< x 0)) d x)))"},
-		&LispFunc{Name: "str", F: "(func [n] (sprintf \"%v\" n))"},
+	LispFuncs: []*module.LispFunc{
+		// &module.LispFunc{Name: "cap", F: "(func (lower upper) (func (x) (max lower (min upper x))))"},
+		&module.LispFunc{Name: "pow", F: "(func [n] (func [x] (math.Pow x n)))"},
+		&module.LispFunc{Name: "with-default", F: "(func [d] (func [x] (if (or (nan? x) (pos-inf? x)) d x)))"},
+		&module.LispFunc{Name: "positive", F: "(func [d] (func [x] (if (or (nan? x) (pos-inf? x) (< x 0)) d x)))"},
+		&module.LispFunc{Name: "str", F: "(func [n] (sprintf \"%v\" n))"},
 	},
-	Scripts: []*Script{ // Mainly for test
-		&Script{Name: "", Source: `
+	Scripts: []*module.Script{ // Mainly for test
+		&module.Script{Name: "", Source: `
 			(var cap (# (func [x] (max %1 (min %2 x)))))`,
 		},
 	},
 }
 
-var combinationsFn = SimpleFunc(func(lists ...[]interface{}) interface{} {
+var combinationsFn = utils.SimpleFunc(func(lists ...[]interface{}) interface{} {
 	res := []interface{}{}
 
 	cpy := func(src []interface{}, v interface{}) []interface{} {
@@ -75,9 +78,9 @@ var combinationsFn = SimpleFunc(func(lists ...[]interface{}) interface{} {
 	}
 	impl(nil, 0)
 	return res
-}, CheckArityAtLeast(1))
+}, utils.CheckArityAtLeast(1))
 
-var transposeFn = ErrFunc(func(listOfLists []interface{}) (interface{}, error) {
+var transposeFn = utils.ErrFunc(func(listOfLists []interface{}) (interface{}, error) {
 	numLists := len(listOfLists)
 	if numLists == 0 {
 		return listOfLists, nil
@@ -104,10 +107,10 @@ var transposeFn = ErrFunc(func(listOfLists []interface{}) (interface{}, error) {
 	}
 
 	return res, nil
-}, CheckArity(1))
+}, utils.CheckArity(1))
 
-var inRangeFn = SimpleFunc(func(min, max float64) interface{} {
-	return SimpleFunc(func(v float64) interface{} {
+var inRangeFn = utils.SimpleFunc(func(min, max float64) interface{} {
+	return utils.SimpleFunc(func(v float64) interface{} {
 		return v >= min && v <= max
-	}, CheckArity(1), ParamToFloat64(0))
-}, CheckArity(2), ParamToFloat64(0), ParamToFloat64(1))
+	}, utils.CheckArity(1), utils.ParamToFloat64(0))
+}, utils.CheckArity(2), utils.ParamToFloat64(0), utils.ParamToFloat64(1))
