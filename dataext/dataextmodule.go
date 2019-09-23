@@ -1,15 +1,15 @@
 package dataext
 
-import "github.com/Stromberg/gel"
+import "github.com/Stromberg/gel/module"
 
 func init() {
-	gel.RegisterModules(DataExtModule)
+	module.RegisterModules(DataExtModule)
 }
 
-var DataExtModule = &gel.Module{
+var DataExtModule = &module.Module{
 	Name: "dataext",
-	LispFuncs: []*gel.LispFunc{
-		&gel.LispFunc{Name: "dataext.Fix", F: "(func [d] (func [x] (if (vec? x) (vec-map (with-default d) x) ((with-default d) x))))"},
-		&gel.LispFunc{Name: "dataext.FixPos", F: "(func [d] (func [x] (if (vec? x) (vec-map (positive d) x) ((positive d) x))))"},
+	LispFuncs: []*module.LispFunc{
+		&module.LispFunc{Name: "dataext.Fix", F: "(func [d] (func [x] (if (vec? x) (vec-map (with-default d) x) ((with-default d) x))))"},
+		&module.LispFunc{Name: "dataext.FixPos", F: "(func [d] (func [x] (if (vec? x) (vec-map (positive d) x) ((positive d) x))))"},
 	},
 }
