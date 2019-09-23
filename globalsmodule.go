@@ -47,6 +47,8 @@ var GlobalsModule = &module.Module{
 		&module.Func{Name: "*", F: mulFn},
 		&module.Func{Name: "/", F: divFn},
 		&module.Func{Name: "%", F: modFn},
+		&module.Func{Name: "!", F: notFn},
+		&module.Func{Name: "not", F: notFn},
 		&module.Func{Name: "int", F: intFn},
 		&module.Func{Name: "float", F: floatFn},
 		&module.Func{Name: "min", F: minFn},
@@ -283,6 +285,10 @@ func uuidFn(args ...interface{}) (value interface{}, err error) {
 	res := uuid.New().String()
 	return res, nil
 }
+
+var notFn = utils.SimpleFunc(func(b bool) bool {
+	return !b
+}, utils.CheckArity(1))
 
 func randFn() func(args ...interface{}) (value interface{}, err error) {
 	r := rand.New(rand.NewSource(time.Now().Unix()))
