@@ -78,12 +78,39 @@ func VecToList(vec []float64) []interface{} {
 	return res
 }
 
+func ListToVec(lst []interface{}) (res []float64, err error) {
+	res = make([]float64, len(lst))
+	for i, v := range lst {
+		switch vr := v.(type) {
+		case int64:
+			res[i] = float64(vr)
+		case float64:
+			res[i] = vr
+		default:
+			return nil, fmt.Errorf("Cannot convert %v to float64", v)
+		}
+	}
+	return
+}
+
 func ToList(data interface{}) (res []interface{}, ok bool) {
 	switch arg := data.(type) {
 	case []interface{}:
 		return arg, true
 	case []float64:
 		return VecToList(arg), true
+	}
+
+	return nil, false
+}
+
+func ToVec(data interface{}) (res []float64, ok bool) {
+	switch arg := data.(type) {
+	case []interface{}:
+		res, err := ListToVec(arg)
+		return res, err == nil
+	case []float64:
+		return arg, true
 	}
 
 	return nil, false
@@ -176,4 +203,46 @@ func MakeAllEitherSliceOrValue(vs ...interface{}) ([]interface{}, error) {
 	}
 
 	return res, nil
+}
+
+func MakeAllSlice(vs ...interface{}) ([]interface{}, error) {
+	l := 1
+	for _, v := range vs {
+		if IsSlice(v) {
+			s := reflect.ValueOf(v)
+			l = s.Len()
+			break
+		}
+	}
+
+	res := make([]interface{}, len(vs))
+	for i, v := range vs {
+		if IsSlice(v) {
+			res[i] = v
+		} else {
+			r := make([]interface{}, l)
+			switch v.(type) {
+			case float64:
+				for j := range r {
+					r[j] = v.(float64)
+				}
+			case int64:
+				for j := range r {
+					r[j] = float64(v.(int64))
+				}
+			}
+
+			res[i] = r
+		}
+	}
+
+	return res, nil
+}
+
+func Repeat(value interface{}, n int) []interface{} {
+	res := make([]interface{}, n)
+	for i := range res {
+		res[i] = value
+	}
+	return res
 }

@@ -888,24 +888,28 @@ var evalList = []struct {
 		errorf(`twik source:1:2: Error in parameter type`),
 	},
 	{
-		`(apply (func [x] (+ 2 x)) (list 2))`,
+		`(apply (func [x] (+ 2 x)) [2])`,
 		int64(4),
 	},
 	{
-		`(apply (func [x] (+ 2 x)) (list 1 2 3))`,
+		`(apply (func [x] (+ 2 x)) [1 2 3])`,
 		errorf(`twik source:1:2: anonymous function takes one argument`),
 	},
 	{
-		`(apply (func [x y z] (+ 2.0 x y z)) (list 1 2 3))`,
+		`(apply (func [x y z] (+ 2.0 x y z)) [1 2 3])`,
 		8.0,
 	},
 	{
-		`(apply (func [x y] (* x y)) (list 1.0 2.0 3.0) (list 1 2 3))`,
+		`(apply (func [x y] (* x y)) [1.0 2.0 3.0] [1 2 3])`,
 		errorf(`twik source:1:2: Wrong number of parameters`),
 	},
 	{
-		`(apply * (list (vec 2.0 3.0) (vec 4.0 5.0)))`,
-		[]float64{8, 15},
+		`(apply * [(vec 2.0 3.0) 2.0])`,
+		[]float64{4.0, 6.0},
+	},
+	{
+		`(apply * [(vec 2.0 3.0) (vec 4.0 5.0)])`,
+		[]float64{8.0, 15.0},
 	},
 
 	// reduce
@@ -1552,6 +1556,10 @@ var evalList = []struct {
 	{
 		`(* (vec 2 4 6) (vec 1.5 3.14 5))`,
 		[]float64{3.0, 12.56, 30},
+	},
+	{
+		`(* (vec 2.0 3.0) (vec 4.0 5.0))`,
+		[]float64{8.0, 15.0},
 	},
 	{
 		`(* (vec 2 4 6) (vec 1.5 3.14))`,
