@@ -2189,6 +2189,27 @@ var evalList = []struct {
 		12,
 	},
 
+	// while
+	{
+		`(while 1)`,
+		errorf("twik source:1:2: while takes 2 or more arguments"),
+	}, {
+		`(while (error "test") (error "code"))`,
+		errorf("twik source:1:9: test"),
+	}, {
+		`(while true (error "code"))`,
+		errorf("twik source:1:14: code"),
+	}, {
+		`(while (fn [] true) (error "code"))`,
+		errorf("twik source:1:22: code"),
+	}, {
+		`(var x 0) (while (fn [] (!= x 4)) (set x (inc x))) x`,
+		4,
+	}, {
+		`(var x 0) (while (!= x 4) (set x (inc x))) x`,
+		4,
+	},
+
 	// identity
 	{
 		`(identity 1)`,

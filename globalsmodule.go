@@ -65,6 +65,7 @@ var GlobalsModule = &module.Module{
 		&module.Func{Name: "fn", F: funcFn},
 		&module.Func{Name: "#", F: macroFn},
 		&module.Func{Name: "for", F: forFn},
+		&module.Func{Name: "while", F: whileFn},
 		&module.Func{Name: "vec", F: vecFn},
 		&module.Func{Name: "vec2list", F: vecToListFn},
 		&module.Func{Name: "list2vec", F: listToVecFn},
@@ -1917,6 +1918,40 @@ func forFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 		_, err = scope.Eval(step)
 		if err != nil {
 			return nil, err
+		}
+	}
+	panic("unreachable")
+}
+
+func whileFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
+	if len(args) < 2 {
+		return nil, errors.New(`while takes 2 or more arguments`)
+	}
+	test, code := args[0], args[1:]
+	scope = scope.Branch()
+	for {
+		more, err := scope.Eval(test)
+		if err != nil {
+			return nil, err
+		}
+
+		switch more.(type) {
+		case bool:
+			if more != true {
+				return value, nil
+			}
+		default:
+			more, err = utils.Call(more)
+			if more != true {
+				return value, nil
+			}
+		}
+
+		for _, c := range code {
+			value, err = scope.Eval(c)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	panic("unreachable")
