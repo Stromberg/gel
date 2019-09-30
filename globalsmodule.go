@@ -13,6 +13,7 @@ import (
 
 	"github.com/Stromberg/gel/ast"
 	"github.com/Stromberg/gel/dataserie"
+	"github.com/Stromberg/gel/f64s"
 	"github.com/Stromberg/gel/module"
 	"github.com/Stromberg/gel/utils"
 	"github.com/google/uuid"
@@ -21,6 +22,7 @@ import (
 func init() {
 	module.RegisterModules(GlobalsModule)
 	module.RegisterModules(dataserie.Module)
+	module.RegisterModules(f64s.F64sModule)
 }
 
 var GlobalsModule = &module.Module{
