@@ -169,6 +169,22 @@ func (ds *DataSerie) Shift(n int) *DataSerie {
 	return NewLine(ds.Name, ToPoints(xs, ys))
 }
 
+// Ugly hack
+func (ds *DataSerie) PadLastUntil(end string, next func(s string) string) *DataSerie {
+
+	xs := ds.Xs()
+	ys := ds.Ys()
+	ysLast := ys[len(ys)-1]
+
+	for xs[len(xs)-1] != end {
+		n := next(xs[len(xs)-1])
+		xs = append(xs, n)
+		ys = append(ys, ysLast)
+	}
+
+	return NewLine(ds.Name, ToPoints(xs, ys))
+}
+
 func (s1 *DataSerie) Union(s2 *DataSerie) (res1, res2 *DataSerie) {
 	r := CommonRange(s1.Range(), s2.Range())
 	return s1.Sub(r), s2.Sub(r)

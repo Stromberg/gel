@@ -3,6 +3,7 @@ package dataserie
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Stromberg/gel/module"
 	"github.com/Stromberg/gel/utils"
@@ -217,6 +218,19 @@ var Module = &module.Module{
 
 				return ds.Shift(-n), nil
 			}, utils.CheckArity(2), utils.ParamToInt(1)),
+		},
+		&module.Func{
+			Name:        "ds.PadLastUntil",
+			Signature:   "(dataserie.PadLastUntil ds until)",
+			Description: "Pads the data serie with new monthly data repeating the last value in Ys",
+			F: utils.ErrFunc(func(ds *DataSerie, until string) (interface{}, error) {
+				next := func(s string) string {
+					t, _ := time.Parse("2006-01-02", s)
+					t = t.AddDate(0, 1, 0)
+					return t.Format("2006-01-02")
+				}
+				return ds.PadLastUntil(until, next), nil
+			}, utils.CheckArity(2)),
 		},
 		&module.Func{
 			Name:        "ds.Union!",
