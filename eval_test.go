@@ -256,7 +256,7 @@ var evalList = []struct {
 	},
 	{
 		`(docs "sort-asc")`,
-		"sort-asc\n\n",
+		"sort-asc\n(sort-asc f l)\nSorts a list in ascending order.",
 	},
 
 	// error
@@ -371,17 +371,6 @@ var evalList = []struct {
 	{
 		`(vec2list (vec 12 3.14))`,
 		[]interface{}{12.0, 3.14},
-	},
-
-	// list2vec
-
-	{
-		`(list2vec (list 12 3.14))`,
-		[]float64{12.0, 3.14},
-	},
-	{
-		`(list2vec (list 12 "d"))`,
-		errorf(`twik source:1:2: Error in parameter type`),
 	},
 
 	// list?
