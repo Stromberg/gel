@@ -2210,6 +2210,32 @@ var evalList = []struct {
 		4,
 	},
 
+	// ->
+	{
+		`(->)`,
+		errorf("twik source:1:2: -> takes 1 or more arguments"),
+	},
+	{
+		`(-> 1 4)`,
+		errorf("twik source:1:2: cannot use 4 as a function"),
+	},
+	{
+		`(-> 1)`,
+		int(1),
+	},
+	{
+		`(-> 2.0 (# (* %1 3)))`,
+		6.0,
+	},
+	{
+		`(-> {:PI 3.14} :PI)`,
+		3.14,
+	},
+	{
+		`(-> {:PI 3.14} :PI (# (* %1 3)))`,
+		9.42,
+	},
+
 	// identity
 	{
 		`(identity 1)`,

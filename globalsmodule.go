@@ -113,6 +113,7 @@ var GlobalsModule = &module.Module{
 		&module.Func{Name: "rand", F: randFn()},
 		&module.Func{Name: "repeatedly", F: repeatedlyFn},
 		&module.Func{Name: "time", F: timeFn},
+		&module.Func{Name: "->", F: threadFn},
 		&module.Func{Name: "printf", F: printfFn},
 		&module.Func{Name: "docs", F: docsFn},
 	},
@@ -1957,6 +1958,27 @@ func whileFn(scope *Scope, args []ast.Node) (value interface{}, err error) {
 		}
 	}
 	panic("unreachable")
+}
+
+func threadFn(args ...interface{}) (value interface{}, err error) {
+	if len(args) < 1 {
+		return nil, errors.New(`-> takes 1 or more arguments`)
+	}
+
+	if len(args) == 1 {
+		return args[0], nil
+	}
+
+	value, funcs := args[0], args[1:]
+
+	for _, c := range funcs {
+		value, err = utils.Call(c, value)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return
 }
 
 var lessThanEqualFn = utils.SimpleFunc(func(v ...interface{}) bool {

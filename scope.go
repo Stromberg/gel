@@ -9,6 +9,7 @@ package gel
 import (
 	"fmt"
 	"io"
+	"runtime/debug"
 
 	"github.com/Stromberg/gel/ast"
 	"github.com/Stromberg/gel/module"
@@ -164,7 +165,7 @@ func (s *Scope) Code(node ast.Node) string {
 func (s *Scope) Eval(node ast.Node) (value interface{}, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = s.errorAt(node, fmt.Errorf("%v", r))
+			err = s.errorAt(node, fmt.Errorf("%v\n%v", r, string(debug.Stack())))
 		}
 	}()
 
