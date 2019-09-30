@@ -84,27 +84,27 @@ var F64sModule = &module.Module{
 		},
 		&module.Func{
 			Name:        "f64s/Stdev",
-			Description: "(f64s.Stdev v) calculates the standard deviation of the list.",
+			Description: "(f64s.Stdev v) calculates the standard deviation of the vec.",
 			F:           utils.SimpleFunc(Stdev, utils.CheckArity(1)),
 		},
 		&module.Func{
 			Name:        "f64s/Mean",
-			Description: "(f64s/Mean v) calculates the mean of the list.",
+			Description: "(f64s/Mean v) calculates the mean of the vec.",
 			F:           utils.SimpleFunc(Mean, utils.CheckArity(1)),
 		},
 		&module.Func{
 			Name:        "f64s/Sum",
-			Description: "(f64s/Sum v) calculates the sum of the list.",
+			Description: "(f64s/Sum v) calculates the sum of the vec.",
 			F:           utils.SimpleFunc(Sum, utils.CheckArity(1)),
 		},
 		&module.Func{
 			Name:        "f64s/GeometricMeanDev",
-			Description: "(f64s/GeometricMeanDev v) calculates the geometric mean of the list.",
+			Description: "(f64s/GeometricMeanDev v) calculates the geometric mean of the vec.",
 			F:           utils.SimpleFunc(GeometricMeanDev, utils.CheckArity(1)),
 		},
 		&module.Func{
 			Name:        "f64s/Nrank",
-			Description: "(f64s/Nrank v) calculates the standard deviation of the list.",
+			Description: "(f64s/Nrank v) calculates the standard deviation of the vec.",
 			F:           utils.SimpleFunc(Nrank, utils.CheckArity(1)),
 		},
 	},

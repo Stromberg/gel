@@ -84,11 +84,11 @@ func (g *Gel) Repl(env *Env) error {
 
 	scope.RedirectStdOut(g.stdOutRedirect)
 
-	state, err := terminal.MakeRaw(1)
+	state, err := terminal.MakeRaw(0)
 	if err != nil {
 		return err
 	}
-	defer terminal.Restore(1, state)
+	defer terminal.Restore(0, state)
 
 	t := terminal.NewTerminal(os.Stdout, "> ")
 	unclosed := ""
@@ -115,45 +115,45 @@ func (g *Gel) Repl(env *Env) error {
 				t.SetPrompt(". ")
 				continue
 			}
-			fmt.Println(err)
+			fmt.Printf("%v\r\n", err)
 			continue
 		}
 		value, err := scope.Eval(node)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("%v\r\n", err)
 			continue
 		}
 		if value != nil {
 			if reflect.TypeOf(value).Kind() == reflect.Func {
-				fmt.Println("#func")
+				fmt.Printf("#func\r\n")
 			} else if v, ok := value.([]interface{}); ok {
 				if len(v) == 0 {
-					fmt.Println("[]")
+					fmt.Printf("[]\r\n")
 				} else {
 					fmt.Print("[")
 					for _, e := range v {
 						fmt.Printf(" %#v", e)
 					}
-					fmt.Println(" ]")
+					fmt.Printf(" ]\r\n")
 				}
 			} else if v, ok := value.([]float64); ok {
 				if len(v) == 0 {
-					fmt.Println("()")
+					fmt.Printf("()\r\n")
 				} else {
-					fmt.Print("(vec")
+					fmt.Printf("(vec")
 					for _, e := range v {
 						fmt.Printf(" %#v", e)
 					}
-					fmt.Println(")")
+					fmt.Printf(")\r\n")
 				}
 			} else if v, ok := value.(string); ok {
-				fmt.Println(v)
+				fmt.Printf("%v\r\n", strings.ReplaceAll(v, "\n", "\r\n"))
 			} else {
-				fmt.Printf("%#v\n", value)
+				fmt.Printf("%#v\r\n", value)
 			}
 		}
 	}
-	fmt.Println()
+	fmt.Print("\r\n")
 	return nil
 }
 
