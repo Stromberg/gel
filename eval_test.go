@@ -1801,6 +1801,9 @@ var evalList = []struct {
 
 	// empty?
 	{
+		`(empty? nil)`,
+		true,
+	}, {
 		`(empty? (vec))`,
 		true,
 	}, {
@@ -1812,6 +1815,20 @@ var evalList = []struct {
 		false,
 	}, {
 		`(empty? (list 1))`,
+		false,
+	},
+
+	// nil?
+	{
+		`(nil? nil)`,
+		true,
+	},
+	{
+		`(nil? 1)`,
+		false,
+	},
+	{
+		`(nil? (vec))`,
 		false,
 	},
 
