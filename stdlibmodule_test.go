@@ -47,6 +47,9 @@ func TestStdLibModuleMath(t *testing.T) {
 
 	test("(math.Sqrt 4)", float64(2))
 
+	test("(math.Log 10)", float64(2.302585092994046))
+	test("(math.Exp 10)", float64(22026.465794806718))
+
 	test("((pow 3) 2)", float64(8))
 	test("((pow 2) 3)", float64(9))
 
