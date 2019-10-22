@@ -169,6 +169,24 @@ func (ds *DataSerie) Shift(n int) *DataSerie {
 	return NewLine(ds.Name, ToPoints(xs, ys))
 }
 
+func (ds *DataSerie) LagFill(n int, next func(s string) string) *DataSerie {
+	if (n > 0 && n > len(ds.Data)) ||
+		n <= 0 {
+		return nil
+	}
+
+	xs := ds.Xs()
+	ys := ds.Ys()
+
+	for i := 0; i < n; i++ {
+		xs = xs[i:]
+		xlast := xs[len(xs)-1]
+		xs = append(xs, next(xlast))
+	}
+
+	return NewLine(ds.Name, ToPoints(xs, ys))
+}
+
 // Ugly hack
 func (ds *DataSerie) PadLastUntil(end string, next func(s string) string) *DataSerie {
 

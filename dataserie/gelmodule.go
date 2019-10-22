@@ -220,6 +220,19 @@ var Module = &module.Module{
 			}, utils.CheckArity(2), utils.ParamToInt(1)),
 		},
 		&module.Func{
+			Name:        "ds.LagFill",
+			Signature:   "(dataserie.LagFill ds n)",
+			Description: "Shifts the data n steps forward in time by adding months at the end.",
+			F: utils.ErrFunc(func(ds *DataSerie, n int) (interface{}, error) {
+				next := func(s string) string {
+					t, _ := time.Parse("2006-01-02", s)
+					t = t.AddDate(0, 1, 0)
+					return t.Format("2006-01-02")
+				}
+				return ds.LagFill(n, next), nil
+			}, utils.CheckArity(2), utils.ParamToInt(1)),
+		},
+		&module.Func{
 			Name:        "ds.PadLastUntil",
 			Signature:   "(dataserie.PadLastUntil ds until)",
 			Description: "Pads the data serie with new monthly data repeating the last value in Ys",
