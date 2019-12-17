@@ -1707,6 +1707,10 @@ var evalList = []struct {
 		int64(12),
 	},
 	{
+		`(int "12")`,
+		int64(12),
+	},
+	{
 		`(int "")`,
 		errorf("twik source:1:2: Error in parameter type"),
 	},

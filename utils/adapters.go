@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"strconv"
 )
 
 var (
@@ -107,6 +108,13 @@ func ParamToInt64(p int) Adapter {
 			v := values[p].(float64)
 			values[p] = int64(v)
 			return values, nil
+		case string:
+			v := values[p].(string)
+			if n, err := strconv.Atoi(v); err == nil {
+				values[p] = int64(n)
+				return values, nil
+			}
+			return []interface{}{}, ErrParameterType
 		default:
 			return []interface{}{}, ErrParameterType
 		}
