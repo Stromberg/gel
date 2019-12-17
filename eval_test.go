@@ -638,6 +638,15 @@ var evalList = []struct {
 		`(sub (list "d" "f" 12) 1 -1)`,
 		[]interface{}{"f", int64(12)},
 	},
+	{
+		`(sub "1234" 1 -1)`,
+		"234",
+	},
+
+	{
+		`(sub "1234567" 3 5)`,
+		"45",
+	},
 
 	// contains?
 	{

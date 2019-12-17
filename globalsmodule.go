@@ -217,7 +217,7 @@ var GlobalsModule = &module.Module{
 		},
 		&module.Func{Name: "sub", F: subFn,
 			Signature:   "(sub c start end)",
-			Description: "Gets a part of a list or vec. Negative indexes start from end.",
+			Description: "Gets a part of a list, string or vec. Negative indexes start from end.",
 		},
 		&module.Func{Name: "contains?", F: containsFn,
 			Signature:   "(contains? c k)",
@@ -918,6 +918,37 @@ var subFn = utils.ErrFunc(func(args ...interface{}) (interface{}, error) {
 		}
 		return v[i1:i2], nil
 	case []float64:
+		v := arg
+		i1, ok := args[1].(int64)
+		if !ok {
+			return nil, utils.ErrParameterType
+		}
+		i2, ok := args[2].(int64)
+		if !ok {
+			return nil, utils.ErrParameterType
+		}
+
+		if i1 < 0 {
+			if -int(i1) > len(v) {
+				return nil, errors.New("Key not found")
+			}
+
+			i1 = int64(len(v)) + i1
+		}
+
+		if i2 < 0 {
+			if -int(i2) > len(v) {
+				return nil, errors.New("Key not found")
+			}
+
+			i2 = int64(len(v)) + i2 + 1
+		}
+
+		if int(i1) >= len(v) || int(i2) > len(v) || i1 >= i2 {
+			return nil, errors.New("Key not found")
+		}
+		return v[i1:i2], nil
+	case string:
 		v := arg
 		i1, ok := args[1].(int64)
 		if !ok {
